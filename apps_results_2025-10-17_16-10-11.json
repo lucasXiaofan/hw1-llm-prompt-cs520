@@ -1,0 +1,144 @@
+{
+  "model": "deepseek/deepseek-chat-v3",
+  "strategies": {
+    "cot": {
+      "system_prompt": "You are an expert programmer. For each problem, follow this step-by-step reasoning process:\n\nSTEP 1 - UNDERSTAND: Read the problem carefully\n- What are the inputs and outputs?\n- What do the examples show?\n- What are the constraints?\n\nSTEP 2 - PLAN: Design your solution\n- What algorithm or approach should you use?\n- What data structures do you need?\n- What's the time/space complexity?\n\nSTEP 3 - EDGE CASES: Identify special cases\n- Empty inputs, single elements, duplicates\n- Boundary values (0, negative, maximum)\n- Invalid or unusual inputs\n\nSTEP 4 - IMPLEMENT: Write clean, correct code\n- Handle all edge cases\n- Use clear variable names\n- Ensure logic is sound\n\nEXAMPLE - Problem: Find the sum of all even numbers in a list\n{\n  \"thinking\": \"STEP 1 - UNDERSTAND: Input is a list of integers, output is a single integer (the sum). Need to identify even numbers (divisible by 2) and add them together. Example: [1,2,3,4] → 2+4 = 6. STEP 2 - PLAN: Use a filtering approach - iterate through the list, check each number with modulo operator (n % 2 == 0), sum the filtered results. Can use generator expression with sum() for clean implementation. Time: O(n), Space: O(1). STEP 3 - EDGE CASES: Empty list → return 0 (sum of nothing). No even numbers → return 0. All even numbers → sum all. List with zero → 0 is even, include it. Negative evens → -2, -4 are even, include them. STEP 4 - IMPLEMENT: Use sum() with generator expression for clarity. The condition 'n % 2 == 0' handles all cases including negatives and zero correctly.\",\n  \"name\": \"sum_evens\",\n  \"code\": \"def sum_evens(numbers):\n    return sum(n for n in numbers if n % 2 == 0)\"\n}\n\nAfter your reasoning, output ONLY this JSON format (no markdown fences, no extra text):\n{\n  \"thinking\": \"<your step-by-step reasoning>\",\n  \"name\": \"<function_name>\",\n  \"code\": \"<complete_python_function_code_only>\"\n\n\nCRITICAL: The \"code\" field must contain ONLY the function code, no thinking or comments.",
+      "description": "Chain-of-Thought strategy (one LLM call)."
+    },
+    "self_planning": {
+      "system_prompt": "PLAN: Create a numbered step-by-step solution plan. Focus on algorithm, not code. Output only the plan.\nCODE: Implement the plan in Python. Output JSON: {\"name\": \"function_name\", \"code\": \"def function_name(...):\\n    ...\"}",
+      "description": "Self-Planning strategy (two LLM calls)."
+    }
+  },
+  "tests": {
+    "problem_0": {
+      "prompt": "\nclass Solution:\n    def subarraysWithKDistinct(self, A: List[int], K: int) -> int:\n            \"\"\"Given an array A of positive integers, call a (contiguous, not necessarily distinct) subarray of A good if the number of different integers in that subarray is exactly K.\n(For example, [1,2,3,1,2] has 3 different integers: 1, 2, and 3.)\nReturn the number of good subarrays of A.\n \nExample 1:\nInput: A = [1,2,1,2,3], K = 2\nOutput: 7\nExplanation: Subarrays formed with exactly 2 different integers: [1,2], [2,1], [1,2], [2,3], [1,2,1], [2,1,2], [1,2,1,2].\n\nExample 2:\nInput: A = [1,2,1,3,4], K = 3\nOutput: 3\nExplanation: Subarrays formed with exactly 3 different integers: [1,2,1,3], [2,1,3], [1,3,4].\n\n \nNote:\n\n1 <= A.length <= 20000\n1 <= A[i] <= A.length\n1 <= K <= A.length\n    \"\"\"\n",
+      "strategies": {
+        "cot": {
+          "thinking": "STEP 1 - UNDERSTAND: The input is a list of positive integers A and an integer K. The output is the count of contiguous subarrays that contain exactly K distinct integers. Examples show that subarrays can overlap and be of varying lengths. Constraints indicate that A can be large (up to 20,000 elements), so an efficient solution is needed. STEP 2 - PLAN: Use a sliding window approach with two pointers to efficiently count subarrays. The key insight is that the number of subarrays with exactly K distinct integers is equal to the number of subarrays with at most K distinct integers minus the number of subarrays with at most K-1 distinct integers. This reduces the problem to finding the number of subarrays with at most K distinct integers, which can be done using a sliding window and a frequency map. Time complexity: O(n), Space complexity: O(n). STEP 3 - EDGE CASES: Empty list → return 0. K = 1 → count single-element subarrays. K = len(A) → only one subarray (the entire array). All elements same → only one distinct integer, so return 0 if K > 1. STEP 4 - IMPLEMENT: Implement the sliding window approach with two helper functions to count subarrays with at most K distinct integers.",
+          "name": "subarraysWithKDistinct",
+          "code": "class Solution:\n    def subarraysWithKDistinct(self, A: List[int], K: int) -> int:\n        def atMostK(A, K):\n            count = {}\n            res = i = 0\n            for j in range(len(A)):\n                if A[j] not in count:\n                    count[A[j]] = 0\n                count[A[j]] += 1\n                while len(count) > K:\n                    count[A[i]] -= 1\n                    if count[A[i]] == 0:\n                        del count[A[i]]\n                    i += 1\n                res += j - i + 1\n            return res\n        return atMostK(A, K) - atMostK(A, K - 1)",
+          "passed": true,
+          "error": "",
+          "test_results": [
+            {
+              "test_case": 1,
+              "passed": true,
+              "expected": "7",
+              "actual": "7",
+              "error": ""
+            }
+          ],
+          "pass_rate": "1/1"
+        },
+        "self_planning": {
+          "thinking": "To solve the problem of finding the number of subarrays with exactly K distinct integers, we can use a sliding window approach combined with a hash map to keep track of the frequency of elements. Here’s a step-by-step plan:\n\n1. **Define a helper function**: Create a helper function `atMostK(A, K)` that returns the number of subarrays with at most K distinct integers. This function will be used to calculate the number of subarrays with exactly K distinct integers by subtracting the number of subarrays with at most K-1 distinct integers from the number of subarrays with at most K distinct integers.\n\n2. **Implement the helper function**:\n   - Initialize two pointers, `left` and `right`, both starting at 0.\n   - Initialize a hash map `freq` to keep track of the frequency of elements in the current window.\n   - Initialize a counter `count` to keep track of the number of subarrays with at most K distinct integers.\n   - Iterate over the array with the `right` pointer:\n     - Increment the frequency of the current element in the hash map.\n     - While the number of distinct elements in the window exceeds K, move the `left` pointer to the right, decrementing the frequency of the element at `left` in the hash map, and remove it from the hash map if its frequency becomes 0.\n     - Update the `count` by adding the length of the current window (`right - left + 1`).\n   - Return the `count`.\n\n3. **Calculate the result**:\n   - Use the helper function to calculate the number of subarrays with at most K distinct integers (`atMostK(A, K)`).\n   - Use the helper function to calculate the number of subarrays with at most K-1 distinct integers (`atMostK(A, K-1)`).\n   - Subtract the second result from the first to get the number of subarrays with exactly K distinct integers.\n\n4. **Return the final result**: The result is the difference between the two counts calculated in the previous step.\n\nThis approach ensures that we efficiently count the subarrays with exactly K distinct integers using a sliding window and a hash map, with a time complexity of O(n), where n is the length of the array.",
+          "name": "subarraysWithKDistinct",
+          "code": "from typing import List\nfrom collections import defaultdict\n\ndef subarraysWithKDistinct(A: List[int], K: int) -> int:\n    def atMostK(A, K):\n        count = 0\n        left = 0\n        freq = defaultdict(int)\n        for right in range(len(A)):\n            if freq[A[right]] == 0:\n                K -= 1\n            freq[A[right]] += 1\n            while K < 0:\n                freq[A[left]] -= 1\n                if freq[A[left]] == 0:\n                    K += 1\n                left += 1\n            count += right - left + 1\n        return count\n    \n    return atMostK(A, K) - atMostK(A, K - 1)",
+          "passed": true,
+          "error": "",
+          "test_results": [
+            {
+              "test_case": 1,
+              "passed": true,
+              "expected": "7",
+              "actual": "7",
+              "error": ""
+            }
+          ],
+          "pass_rate": "1/1"
+        }
+      }
+    },
+    "problem_1": {
+      "prompt": "\nclass Solution:\n    def minNumberOfFrogs(self, croakOfFrogs: str) -> int:\n            \"\"\"Given the string croakOfFrogs, which represents a combination of the string \"croak\" from different frogs, that is, multiple frogs can croak at the same time, so multiple “croak” are mixed. Return the minimum number of different frogs to finish all the croak in the given string.\nA valid \"croak\" means a frog is printing 5 letters ‘c’, ’r’, ’o’, ’a’, ’k’ sequentially. The frogs have to print all five letters to finish a croak. If the given string is not a combination of valid \"croak\" return -1.\n \nExample 1:\nInput: croakOfFrogs = \"croakcroak\"\nOutput: 1 \nExplanation: One frog yelling \"croak\" twice.\n\nExample 2:\nInput: croakOfFrogs = \"crcoakroak\"\nOutput: 2 \nExplanation: The minimum number of frogs is two. \nThe first frog could yell \"crcoakroak\".\nThe second frog could yell later \"crcoakroak\".\n\nExample 3:\nInput: croakOfFrogs = \"croakcrook\"\nOutput: -1\nExplanation: The given string is an invalid combination of \"croak\" from different frogs.\n\nExample 4:\nInput: croakOfFrogs = \"croakcroa\"\nOutput: -1\n\n \nConstraints:\n\n1 <= croakOfFrogs.length <= 10^5\nAll characters in the string are: 'c', 'r', 'o', 'a' or 'k'.\n    \"\"\"\n",
+      "strategies": {
+        "cot": {
+          "thinking": "STEP 1 - UNDERSTAND: The problem requires determining the minimum number of frogs needed to produce the given string of croaks, where each frog produces 'croak' in order. If the string is not a valid combination of 'croak's, return -1. The key is to track the sequence of characters and ensure they follow 'c' -> 'r' -> 'o' -> 'a' -> 'k' for each frog. STEP 2 - PLAN: Use a dictionary to count the occurrences of each character in the sequence. For each character in the string, update the counts and ensure the sequence is maintained. The number of frogs needed at any point is the maximum number of 'c's that are not yet matched with 'k's. STEP 3 - EDGE CASES: Empty string (but constraints say length >=1). String with characters not in 'croak'. String where counts of characters are not balanced (e.g., more 'c's than 'k's). String that doesn't follow the sequence (e.g., 'croakcrook'). STEP 4 - IMPLEMENT: Initialize counts for each character. For each character in the string, update the counts and check if the sequence is violated. Track the maximum number of frogs needed (count of 'c's - count of 'k's). At the end, ensure all counts are balanced.",
+          "name": "minNumberOfFrogs",
+          "code": "class Solution:\n    def minNumberOfFrogs(self, croakOfFrogs: str) -> int:\n        c = r = o = a = k = frogs = max_frogs = 0\n        for char in croakOfFrogs:\n            if char == 'c':\n                c += 1\n                frogs += 1\n                max_frogs = max(max_frogs, frogs)\n            elif char == 'r':\n                r += 1\n            elif char == 'o':\n                o += 1\n            elif char == 'a':\n                a += 1\n            elif char == 'k':\n                k += 1\n                frogs -= 1\n            # Check for invalid sequence\n            if not (c >= r >= o >= a >= k):\n                return -1\n        # Check if all counts are balanced\n        if c == r == o == a == k:\n            return max_frogs\n        else:\n            return -1",
+          "passed": true,
+          "error": "",
+          "test_results": [
+            {
+              "test_case": 1,
+              "passed": true,
+              "expected": "1",
+              "actual": "1",
+              "error": ""
+            }
+          ],
+          "pass_rate": "1/1"
+        },
+        "self_planning": {
+          "thinking": "1. **Initialize a dictionary** to keep track of the count of each character in the string. This will help in validating the sequence and determining the number of frogs.\n\n2. **Check for invalid sequences**:\n   - If the total number of 'c's is not equal to the total number of 'r's, 'o's, 'a's, or 'k's, return -1. This ensures that each 'c' has a corresponding 'r', 'o', 'a', and 'k' to form a valid \"croak\".\n\n3. **Initialize a variable** to keep track of the number of active frogs. This will be updated as we process the string.\n\n4. **Iterate through the string**:\n   - For each character, update the count in the dictionary.\n   - If the character is 'c', increment the count of active frogs.\n   - If the character is 'k', decrement the count of active frogs since a frog has completed its croak.\n   - Ensure that the sequence of characters is valid by checking if the count of 'c' is always greater than or equal to the counts of 'r', 'o', 'a', and 'k' at each step. If not, return -1.\n\n5. **After processing the entire string**, check if the count of active frogs is zero. If not, return -1, as some frogs did not complete their croak.\n\n6. **Return the maximum number of active frogs** observed during the iteration. This represents the minimum number of frogs needed to produce the given sequence of croaks.",
+          "name": "minNumberOfFrogs",
+          "code": "def minNumberOfFrogs(croakOfFrogs: str) -> int:\n    # Initialize a dictionary to count the occurrences of each character\n    count = {'c': 0, 'r': 0, 'o': 0, 'a': 0, 'k': 0}\n    \n    # Initialize the number of active frogs and the maximum number of frogs needed\n    active_frogs = 0\n    max_frogs = 0\n    \n    for char in croakOfFrogs:\n        # Update the count for the current character\n        count[char] += 1\n        \n        # Check if the sequence is valid\n        if not (count['c'] >= count['r'] >= count['o'] >= count['a'] >= count['k']):\n            return -1\n        \n        # Update the number of active frogs\n        if char == 'c':\n            active_frogs += 1\n            max_frogs = max(max_frogs, active_frogs)\n        elif char == 'k':\n            active_frogs -= 1\n    \n    # Check if all frogs have completed their croak\n    if active_frogs != 0:\n        return -1\n    \n    return max_frogs",
+          "passed": true,
+          "error": "",
+          "test_results": [
+            {
+              "test_case": 1,
+              "passed": true,
+              "expected": "1",
+              "actual": "1",
+              "error": ""
+            }
+          ],
+          "pass_rate": "1/1"
+        }
+      }
+    },
+    "problem_2": {
+      "prompt": "\nclass Solution:\n    def nextGreaterElement(self, n: int) -> int:\n            \"\"\"Given a positive 32-bit integer n, you need to find the smallest 32-bit integer which has exactly the same digits existing in the integer n and is greater in value than n. If no such positive 32-bit integer exists, you need to return -1.\n\nExample 1:\n\n\nInput: 12\nOutput: 21\n\n\n \n\nExample 2:\n\n\nInput: 21\nOutput: -1\n    \"\"\"\n",
+      "strategies": {
+        "cot": {
+          "thinking": "STEP 1 - UNDERSTAND: The input is a positive 32-bit integer n, and the output is the smallest 32-bit integer greater than n that has the same digits as n. If no such integer exists, return -1. Examples: 12 → 21, 21 → -1. Constraints: n is a positive 32-bit integer. STEP 2 - PLAN: Convert the integer to a list of digits. Find the pivot where the sequence starts to decrease. Swap the pivot with the smallest digit greater than it on the right. Reverse the digits after the pivot to get the smallest possible number. Convert back to an integer and check if it's within the 32-bit integer range. If not, return -1. Time: O(n), Space: O(n). STEP 3 - EDGE CASES: Single-digit number → return -1. Number with all digits in descending order → return -1. Number with duplicate digits → handle correctly. Maximum 32-bit integer → check overflow. STEP 4 - IMPLEMENT: Implement the steps above, ensuring to handle all edge cases and constraints.",
+          "name": "nextGreaterElement",
+          "code": "class Solution:\n    def nextGreaterElement(self, n: int) -> int:\n        digits = list(str(n))\n        length = len(digits)\n        pivot = -1\n        for i in range(length - 2, -1, -1):\n            if digits[i] < digits[i + 1]:\n                pivot = i\n                break\n        if pivot == -1:\n            return -1\n        for i in range(length - 1, pivot, -1):\n            if digits[i] > digits[pivot]:\n                digits[i], digits[pivot] = digits[pivot], digits[i]\n                break\n        digits[pivot + 1:] = digits[pivot + 1:][::-1]\n        result = int(''.join(digits))\n        return result if result < 2**31 else -1",
+          "passed": true,
+          "error": "",
+          "test_results": [
+            {
+              "test_case": 1,
+              "passed": true,
+              "expected": "21",
+              "actual": "21",
+              "error": ""
+            }
+          ],
+          "pass_rate": "1/1"
+        },
+        "self_planning": {
+          "thinking": "1. **Convert the integer to a list of digits**: This allows easy manipulation of individual digits.\n2. **Find the pivot**: Traverse the list from the end to find the first digit that is smaller than the digit immediately after it. This is the pivot.\n3. **Check if pivot exists**: If no such pivot is found, it means the number is the largest possible with its digits, so return -1.\n4. **Find the swap candidate**: From the end of the list, find the smallest digit that is greater than the pivot.\n5. **Swap the pivot and the swap candidate**: This ensures the new number is the smallest possible number greater than the original.\n6. **Sort the digits after the pivot**: To get the smallest possible number, sort the digits after the pivot in ascending order.\n7. **Convert the list of digits back to an integer**: This gives the next greater number.\n8. **Check for 32-bit integer overflow**: Ensure the result is within the 32-bit signed integer range. If not, return -1.\n9. **Return the result**: If all checks pass, return the computed number.",
+          "name": "nextGreaterElement",
+          "code": "def nextGreaterElement(n: int) -> int:\n    digits = list(str(n))\n    length = len(digits)\n    pivot = -1\n    \n    # Step 2: Find the pivot\n    for i in range(length - 2, -1, -1):\n        if digits[i] < digits[i + 1]:\n            pivot = i\n            break\n    \n    # Step 3: Check if pivot exists\n    if pivot == -1:\n        return -1\n    \n    # Step 4: Find the swap candidate\n    for i in range(length - 1, pivot, -1):\n        if digits[i] > digits[pivot]:\n            break\n    \n    # Step 5: Swap the pivot and the swap candidate\n    digits[pivot], digits[i] = digits[i], digits[pivot]\n    \n    # Step 6: Sort the digits after the pivot\n    digits[pivot + 1:] = sorted(digits[pivot + 1:])\n    \n    # Step 7: Convert the list of digits back to an integer\n    result = int(''.join(digits))\n    \n    # Step 8: Check for 32-bit integer overflow\n    if result > 2**31 - 1:\n        return -1\n    \n    # Step 9: Return the result\n    return result",
+          "passed": true,
+          "error": "",
+          "test_results": [
+            {
+              "test_case": 1,
+              "passed": true,
+              "expected": "21",
+              "actual": "21",
+              "error": ""
+            }
+          ],
+          "pass_rate": "1/1"
+        }
+      }
+    }
+  },
+  "summary": {
+    "cot": {
+      "total_problems": 3,
+      "fully_passed": 3,
+      "pass_rate": "3/3 (100.0%)"
+    },
+    "self_planning": {
+      "total_problems": 3,
+      "fully_passed": 3,
+      "pass_rate": "3/3 (100.0%)"
+    }
+  }
+}

@@ -1,0 +1,417 @@
+{
+  "model": "deepseek/deepseek-chat-v3",
+  "strategies": {
+    "cot": {
+      "system_prompt": "You are an expert programmer. For each problem, follow this step-by-step reasoning process:\n\nSTEP 1 - UNDERSTAND: Read the problem carefully\n- What are the inputs and outputs?\n- What do the examples show?\n- What are the constraints?\n\nSTEP 2 - PLAN: Design your solution\n- What algorithm or approach should you use?\n- What data structures do you need?\n- What's the time/space complexity?\n\nSTEP 3 - EDGE CASES: Identify special cases\n- Empty inputs, single elements, duplicates\n- Boundary values (0, negative, maximum)\n- Invalid or unusual inputs\n\nSTEP 4 - IMPLEMENT: Write clean, correct code\n- Handle all edge cases\n- Use clear variable names\n- Ensure logic is sound\n\nEXAMPLE - Problem: Find the sum of all even numbers in a list\n{\n  \"thinking\": \"STEP 1 - UNDERSTAND: Input is a list of integers, output is a single integer (the sum). Need to identify even numbers (divisible by 2) and add them together. Example: [1,2,3,4] → 2+4 = 6. STEP 2 - PLAN: Use a filtering approach - iterate through the list, check each number with modulo operator (n % 2 == 0), sum the filtered results. Can use generator expression with sum() for clean implementation. Time: O(n), Space: O(1). STEP 3 - EDGE CASES: Empty list → return 0 (sum of nothing). No even numbers → return 0. All even numbers → sum all. List with zero → 0 is even, include it. Negative evens → -2, -4 are even, include them. STEP 4 - IMPLEMENT: Use sum() with generator expression for clarity. The condition 'n % 2 == 0' handles all cases including negatives and zero correctly.\",\n  \"name\": \"sum_evens\",\n  \"code\": \"def sum_evens(numbers):\n    return sum(n for n in numbers if n % 2 == 0)\"\n}\n\nAfter your reasoning, output ONLY this JSON format (no markdown fences, no extra text):\n{\n  \"thinking\": \"<your step-by-step reasoning>\",\n  \"name\": \"<function_name>\",\n  \"code\": \"<complete_python_function_code_only>\"\n\n\nCRITICAL: The \"code\" field must contain ONLY the function code, no thinking or comments.",
+      "description": "Chain-of-Thought strategy (one LLM call)."
+    },
+    "self_planning": {
+      "system_prompt": "PLAN: Create a numbered step-by-step solution plan. Focus on algorithm, not code. Output only the plan.\nCODE: Implement the plan in Python. Output JSON: {\"name\": \"function_name\", \"code\": \"def function_name(...):\\n    ...\"}",
+      "description": "Self-Planning strategy (two LLM calls)."
+    }
+  },
+  "tests": {
+    "problem_0": {
+      "prompt": "\nclass Solution:\n    def subarraysWithKDistinct(self, A: List[int], K: int) -> int:\n            \"\"\"Given an array A of positive integers, call a (contiguous, not necessarily distinct) subarray of A good if the number of different integers in that subarray is exactly K.\n(For example, [1,2,3,1,2] has 3 different integers: 1, 2, and 3.)\nReturn the number of good subarrays of A.\n \nExample 1:\nInput: A = [1,2,1,2,3], K = 2\nOutput: 7\nExplanation: Subarrays formed with exactly 2 different integers: [1,2], [2,1], [1,2], [2,3], [1,2,1], [2,1,2], [1,2,1,2].\n\nExample 2:\nInput: A = [1,2,1,3,4], K = 3\nOutput: 3\nExplanation: Subarrays formed with exactly 3 different integers: [1,2,1,3], [2,1,3], [1,3,4].\n\n \nNote:\n\n1 <= A.length <= 20000\n1 <= A[i] <= A.length\n1 <= K <= A.length\n    \"\"\"\n",
+      "strategies": {
+        "cot": {
+          "thinking": "STEP 1 - UNDERSTAND: The problem requires counting subarrays with exactly K distinct elements. Input is a list A of positive integers and integer K. Output is the count of such subarrays. Examples show contiguous subarrays are considered. Constraints indicate large input size (20,000), so O(n^2) solutions won't work. STEP 2 - PLAN: Use sliding window technique with hash maps to track distinct counts efficiently. The key insight is to calculate subarrays with at most K distinct elements and subtract subarrays with at most K-1 distinct elements. This gives exactly K distinct elements. Time complexity: O(n) as we process each element twice (for K and K-1). Space complexity: O(K) for storing counts. STEP 3 - EDGE CASES: K=1 (single distinct element), K=len(A) (whole array is one subarray). Array with all identical elements. Minimal inputs (length 1). STEP 4 - IMPLEMENT: Implement helper function for subarrays with at most K distinct elements using sliding window and hash map to track frequencies.",
+          "name": "subarraysWithKDistinct",
+          "code": "from collections import defaultdict\n\nclass Solution:\n    def subarraysWithKDistinct(self, A: List[int], K: int) -> int:\n        def atMostK(A, K):\n            count = defaultdict(int)\n            res = left = 0\n            for right in range(len(A)):\n                if count[A[right]] == 0:\n                    K -= 1\n                count[A[right]] += 1\n                while K < 0:\n                    count[A[left]] -= 1\n                    if count[A[left]] == 0:\n                        K += 1\n                    left += 1\n                res += right - left + 1\n            return res\n        \n        return atMostK(A, K) - atMostK(A, K - 1)",
+          "passed": true,
+          "error": "",
+          "test_results": [
+            {
+              "test_case": 1,
+              "passed": true,
+              "expected": "7",
+              "actual": "7",
+              "error": ""
+            }
+          ],
+          "pass_rate": "1/1"
+        },
+        "self_planning": {
+          "thinking": "### Step-by-Step Solution Plan:\n\n1. **Understand the Problem Requirements**: We need to find the number of contiguous subarrays that contain exactly `K` distinct integers within the given array `A`.\n\n2. **Transform the Problem**: \n   - The problem can be translated into finding the number of subarrays with at most `K` distinct integers minus the number of subarrays with at most `K-1` distinct integers. This gives the exact count of subarrays with exactly `K` distinct integers.\n\n3. **Sliding Window Approach**:\n   - Define a helper function `atMostK(A, K)` that calculates the number of subarrays with at most `K` distinct integers using a sliding window technique.\n   - Initialize two pointers, `left` and `right`, both starting at the beginning of the array.\n   - Use a hash map (or dictionary) to keep track of the frequency of elements within the current window.\n   - Expand the window by moving the `right` pointer:\n     - Update the frequency count of `A[right]` in the hash map.\n     - If the number of distinct elements in the hash map exceeds `K`, contract the window from the `left`:\n       - Decrement the count of `A[left]` in the hash map.\n       - If the count reaches zero, remove it from the hash map.\n       - Increment `left` to reduce the window size.\n     - The number of valid subarrays ending at `right` is `right - left + 1`. Add this to the result.\n\n4. **Calculate the Result**:\n   - The subtotal of subarrays with exactly `K` distinct integers is obtained by computing `atMostK(A, K) - atMostK(A, K - 1)`.\n\n5. **Edge Cases**:\n   - If `K` is 0, return 0 since no subarrays can have 0 distinct integers.\n   - If `K` is greater than the number of distinct elements in the array, return 0 because it's impossible to have a subarray with `K` distinct elements.\n\n6. **Final Answer**:\n   - Combine the results from the helper function subtraction to get the number of subarrays with exactly `K` distinct integers. \n\nThis approach efficiently computes the solution by leveraging the sliding window technique and transforming the problem into manageable subproblems.",
+          "name": "subarraysWithKDistinct",
+          "code": "from typing import List\nfrom collections import defaultdict\n\ndef subarraysWithKDistinct(A: List[int], K: int) -> int:\n    def atMostK(K: int) -> int:\n        count = defaultdict(int)\n        res = left = 0\n        for right in range(len(A)):\n            if count[A[right]] == 0:\n                K -= 1\n            count[A[right]] += 1\n            while K < 0:\n                count[A[left]] -= 1\n                if count[A[left]] == 0:\n                    K += 1\n                left += 1\n            res += right - left + 1\n        return res\n    return atMostK(K) - atMostK(K - 1) if K != 0 else 0",
+          "passed": true,
+          "error": "",
+          "test_results": [
+            {
+              "test_case": 1,
+              "passed": true,
+              "expected": "7",
+              "actual": "7",
+              "error": ""
+            }
+          ],
+          "pass_rate": "1/1"
+        }
+      }
+    },
+    "problem_1": {
+      "prompt": "\nclass Solution:\n    def minNumberOfFrogs(self, croakOfFrogs: str) -> int:\n            \"\"\"Given the string croakOfFrogs, which represents a combination of the string \"croak\" from different frogs, that is, multiple frogs can croak at the same time, so multiple “croak” are mixed. Return the minimum number of different frogs to finish all the croak in the given string.\nA valid \"croak\" means a frog is printing 5 letters ‘c’, ’r’, ’o’, ’a’, ’k’ sequentially. The frogs have to print all five letters to finish a croak. If the given string is not a combination of valid \"croak\" return -1.\n \nExample 1:\nInput: croakOfFrogs = \"croakcroak\"\nOutput: 1 \nExplanation: One frog yelling \"croak\" twice.\n\nExample 2:\nInput: croakOfFrogs = \"crcoakroak\"\nOutput: 2 \nExplanation: The minimum number of frogs is two. \nThe first frog could yell \"crcoakroak\".\nThe second frog could yell later \"crcoakroak\".\n\nExample 3:\nInput: croakOfFrogs = \"croakcrook\"\nOutput: -1\nExplanation: The given string is an invalid combination of \"croak\" from different frogs.\n\nExample 4:\nInput: croakOfFrogs = \"croakcroa\"\nOutput: -1\n\n \nConstraints:\n\n1 <= croakOfFrogs.length <= 10^5\nAll characters in the string are: 'c', 'r', 'o', 'a' or 'k'.\n    \"\"\"\n",
+      "strategies": {
+        "cot": {
+          "thinking": "STEP 1 - UNDERSTAND: The input is a string composed of characters 'c', 'r', 'o', 'a', 'k'. The output is the minimum number of frogs needed to produce the sequence of croaks, or -1 if the sequence is invalid. A valid croak is 'croak' in order. Multiple frogs can croak simultaneously, so the sequence can be interleaved. STEP 2 - PLAN: Use a dictionary to count the occurrences of each character. Track the number of active frogs by incrementing when 'c' is encountered and decrementing when 'k' is encountered. Ensure that the sequence of characters is valid by checking the order 'c' -> 'r' -> 'o' -> 'a' -> 'k'. If at any point the sequence is invalid, return -1. The maximum number of active frogs at any point is the minimum number of frogs needed. STEP 3 - EDGE CASES: Empty string → return 0. String with invalid sequence → return -1. String with all 'c's → return -1. String with all 'k's → return -1. String with valid sequence but interleaved → calculate minimum frogs. STEP 4 - IMPLEMENT: Use a dictionary to count characters and track the sequence. Ensure the sequence is valid and calculate the maximum number of active frogs.",
+          "name": "minNumberOfFrogs",
+          "code": "class Solution:\n    def minNumberOfFrogs(self, croakOfFrogs: str) -> int:\n        count = {'c': 0, 'r': 0, 'o': 0, 'a': 0, 'k': 0}\n        frogs = 0\n        max_frogs = 0\n        for char in croakOfFrogs:\n            count[char] += 1\n            if char == 'c':\n                frogs += 1\n                max_frogs = max(max_frogs, frogs)\n            elif char == 'k':\n                frogs -= 1\n            if not (count['c'] >= count['r'] >= count['o'] >= count['a'] >= count['k']):\n                return -1\n        return max_frogs if frogs == 0 and count['c'] == count['k'] else -1",
+          "passed": true,
+          "error": "",
+          "test_results": [
+            {
+              "test_case": 1,
+              "passed": true,
+              "expected": "1",
+              "actual": "1",
+              "error": ""
+            }
+          ],
+          "pass_rate": "1/1"
+        },
+        "self_planning": {
+          "thinking": "To solve this problem, we need to determine the minimum number of frogs required to produce the given sequence of croaks, where each frog produces the sequence \"croak\" in order. The solution involves tracking the state of each frog as it progresses through the letters of \"croak\" and ensuring that the sequence is valid.\n\n### Approach\n1. **Check for Valid Sequence**: The total number of each character in the string must be balanced. Specifically, the counts of 'c', 'r', 'o', 'a', and 'k' must all be equal. If they are not, the sequence is invalid, and we return -1.\n\n2. **Track Frog States**: As we process each character in the string, we need to track how many frogs are at each stage of the croak sequence. The stages are:\n   - 'c' indicates a new croak has started (a new frog might be needed).\n   - 'r' must follow 'c' (i.e., there should be a frog that has just said 'c').\n   - 'o' must follow 'r', and so on for 'a' and 'k'.\n   - When a frog reaches 'k', it completes the croak and can be reused for another 'c'.\n\n3. **Count Active Frogs**: For each character, update the counts of frogs in each state. The maximum number of frogs active at any point (i.e., frogs that have started but not yet finished their croak) gives the minimum number of frogs needed.\n\n### Solution Plan\n1. **Initialize Counters**: Create a dictionary or an array to keep track of the counts of each character ('c', 'r', 'o', 'a', 'k') encountered so far.\n\n2. **Check Character Balance**: After processing the entire string, verify that the counts of 'c', 'r', 'o', 'a', and 'k' are all equal. If not, return -1.\n\n3. **Process Each Character**: For each character in the string:\n   - **'c'**: Increment the count of frogs in the 'c' stage. The number of active frogs is current 'c' frogs minus those that have completed ('k' frogs). Track the maximum active frogs encountered.\n   - **'r'**: Decrement the 'c' count and increment the 'r' count. Ensure that 'c' count was positive before this step; otherwise, the sequence is invalid.\n   - **'o'**: Similarly, decrement 'r' and increment 'o', checking validity.\n   - **'a'**: Decrement 'o' and increment 'a', checking validity.\n   - **'k'**: Decrement 'a' and increment 'k'. This indicates a frog has completed its croak. The 'k' count helps in determining how many frogs can be reused.\n\n4. **Check Validity During Processing**: For each step after 'c', ensure the previous character's count is positive before proceeding. If not, the sequence is invalid, and we return -1.\n\n5. **Determine Minimum Frogs**: The maximum value of (active frogs) during processing gives the minimum number of frogs needed. Active frogs at any point are the frogs that have started but not finished (i.e., sum of frogs in stages 'c', 'r', 'o', 'a').\n\n6. **Return Result**: After processing all characters, if all checks pass, return the maximum active frogs encountered. If any check fails, return -1.\n\n### Key Points\n- The solution ensures that the sequence of characters follows the valid \"croak\" order for each frog.\n- The counts of each character must balance at the end, ensuring all started croaks are completed.\n- The active frogs at any point are tracked to determine the minimum frogs needed concurrently.\n\nThis approach efficiently checks for validity and computes the result in linear time, making it suitable for large input sizes.",
+          "name": "minNumberOfFrogs",
+          "code": "def minNumberOfFrogs(croakOfFrogs: str) -> int:\n    if len(croakOfFrogs) % 5 != 0:\n        return -1\n    \n    count = {'c': 0, 'r': 0, 'o': 0, 'a': 0, 'k': 0}\n    max_frogs = 0\n    active_frogs = 0\n    \n    for ch in croakOfFrogs:\n        if ch not in count:\n            return -1\n        \n        if ch == 'c':\n            count['c'] += 1\n            active_frogs += 1\n            max_frogs = max(max_frogs, active_frogs)\n        elif ch == 'r':\n            if count['c'] <= 0:\n                return -1\n            count['c'] -= 1\n            count['r'] += 1\n        elif ch == 'o':\n            if count['r'] <= 0:\n                return -1\n            count['r'] -= 1\n            count['o'] += 1\n        elif ch == 'a':\n            if count['o'] <= 0:\n                return -1\n            count['o'] -= 1\n            count['a'] += 1\n        elif ch == 'k':\n            if count['a'] <= 0:\n                return -1\n            count['a'] -= 1\n            count['k'] += 1\n            active_frogs -= 1\n    \n    if any(count[ch] != 0 for ch in count if ch != 'k'):\n        return -1\n    \n    return max_frogs",
+          "passed": true,
+          "error": "",
+          "test_results": [
+            {
+              "test_case": 1,
+              "passed": true,
+              "expected": "1",
+              "actual": "1",
+              "error": ""
+            }
+          ],
+          "pass_rate": "1/1"
+        }
+      }
+    },
+    "problem_2": {
+      "prompt": "\nclass Solution:\n    def nextGreaterElement(self, n: int) -> int:\n            \"\"\"Given a positive 32-bit integer n, you need to find the smallest 32-bit integer which has exactly the same digits existing in the integer n and is greater in value than n. If no such positive 32-bit integer exists, you need to return -1.\n\nExample 1:\n\n\nInput: 12\nOutput: 21\n\n\n \n\nExample 2:\n\n\nInput: 21\nOutput: -1\n    \"\"\"\n",
+      "strategies": {
+        "cot": {
+          "thinking": "STEP 1 - UNDERSTAND: The input is a positive 32-bit integer n, and the output is the smallest 32-bit integer greater than n that has the same digits as n. If no such integer exists, return -1. Examples: 12 → 21, 21 → -1. Constraints: n is a positive 32-bit integer. STEP 2 - PLAN: Convert the integer to a list of digits. Find the pivot where the sequence starts to decrease from the right. Swap the pivot with the smallest digit greater than it on the right. Reverse the digits after the pivot to get the smallest possible number. Convert back to an integer and check if it's within the 32-bit integer range. Time: O(n), Space: O(n). STEP 3 - EDGE CASES: Single-digit number → return -1. Number with all digits in descending order → return -1. Number with duplicate digits → handle correctly. Maximum 32-bit integer → check overflow. STEP 4 - IMPLEMENT: Implement the steps above using list operations and handle edge cases.",
+          "name": "nextGreaterElement",
+          "code": "class Solution:\n    def nextGreaterElement(self, n: int) -> int:\n        digits = list(str(n))\n        length = len(digits)\n        pivot = -1\n        for i in range(length - 2, -1, -1):\n            if digits[i] < digits[i + 1]:\n                pivot = i\n                break\n        if pivot == -1:\n            return -1\n        for i in range(length - 1, pivot, -1):\n            if digits[i] > digits[pivot]:\n                digits[i], digits[pivot] = digits[pivot], digits[i]\n                break\n        digits[pivot + 1:] = digits[pivot + 1:][::-1]\n        result = int(''.join(digits))\n        return result if result < 2**31 else -1",
+          "passed": true,
+          "error": "",
+          "test_results": [
+            {
+              "test_case": 1,
+              "passed": true,
+              "expected": "21",
+              "actual": "21",
+              "error": ""
+            }
+          ],
+          "pass_rate": "1/1"
+        },
+        "self_planning": {
+          "thinking": "To solve this problem, we need to find the smallest integer greater than the given number `n` that can be formed by rearranging its digits. If no such number exists, we should return -1. The solution involves a systematic approach to identify the next greater permutation of the digits in `n`.\n\n### Step-by-Step Solution Plan:\n\n1. **Convert the Number to a List of Digits**: \n   - Convert the integer `n` into a list of its digits for easier manipulation.\n\n2. **Find the Pivot**:\n   - Traverse the list of digits from the end to the beginning to find the first digit that is smaller than the digit immediately after it. This digit is called the pivot. The index of this pivot is important because it indicates where the sequence starts to decrease, allowing us to find the next greater number.\n\n3. **Check for No Pivot**:\n   - If no such pivot is found (i.e., the digits are in non-increasing order from left to right), it means the number is already the largest possible permutation of its digits. In this case, return -1.\n\n4. **Find the Swap Candidate**:\n   - From the end of the list again, find the smallest digit that is larger than the pivot digit. This digit will be swapped with the pivot to ensure the next greater number is as small as possible.\n\n5. **Swap the Pivot and the Swap Candidate**:\n   - Swap the pivot digit with the swap candidate identified in the previous step.\n\n6. **Reverse the Suffix**:\n   - Reverse the portion of the list that comes after the pivot's original position. This step ensures that the suffix is in the smallest possible order, which helps in forming the smallest number greater than `n`.\n\n7. **Convert Back to Integer**:\n   - Convert the list of digits back into an integer.\n\n8. **Check for 32-bit Integer Overflow**:\n   - Ensure that the resulting integer is within the 32-bit signed integer range. If it exceeds the maximum value (2^31 - 1), return -1.\n\n9. **Return the Result**:\n   - Return the newly formed integer if it is valid; otherwise, return -1.\n\n### Example Walkthrough:\nFor `n = 12`:\n1. Digits: [1, 2]\n2. Pivot: 1 (at index 0)\n3. Swap candidate: 2 (at index 1)\n4. Swap to get [2, 1]\n5. Reverse suffix (none to reverse after pivot)\n6. Result: 21 (valid and within 32-bit range)\n\nFor `n = 21`:\n1. Digits: [2, 1]\n2. No pivot found (digits are in non-increasing order)\n3. Return -1\n\nThis approach efficiently finds the next greater number by leveraging the properties of digit permutations and ensures the result is the smallest possible valid number greater than `n`.",
+          "name": "nextGreaterElement",
+          "code": "def nextGreaterElement(n: int) -> int:\n    digits = list(str(n))\n    pivot = len(digits) - 2\n    while pivot >= 0 and digits[pivot] >= digits[pivot + 1]:\n        pivot -= 1\n    if pivot == -1:\n        return -1\n    swap = len(digits) - 1\n    while swap > pivot and digits[swap] <= digits[pivot]:\n        swap -= 1\n    digits[pivot], digits[swap] = digits[swap], digits[pivot]\n    digits[pivot + 1:] = digits[pivot + 1:][::-1]\n    result = int(''.join(digits))\n    return result if result <= 2**31 - 1 else -1",
+          "passed": true,
+          "error": "",
+          "test_results": [
+            {
+              "test_case": 1,
+              "passed": true,
+              "expected": "21",
+              "actual": "21",
+              "error": ""
+            }
+          ],
+          "pass_rate": "1/1"
+        }
+      }
+    },
+    "problem_3": {
+      "prompt": "\nclass Solution:\n    def numTimesAllBlue(self, light: List[int]) -> int:\n            \"\"\"There is a room with n bulbs, numbered from 1 to n, arranged in a row from left to right. Initially, all the bulbs are turned off.\nAt moment k (for k from 0 to n - 1), we turn on the light[k] bulb. A bulb change color to blue only if it is on and all the previous bulbs (to the left) are turned on too.\nReturn the number of moments in which all turned on bulbs are blue.\n \nExample 1:\n\nInput: light = [2,1,3,5,4]\nOutput: 3\nExplanation: All bulbs turned on, are blue at the moment 1, 2 and 4.\n\nExample 2:\nInput: light = [3,2,4,1,5]\nOutput: 2\nExplanation: All bulbs turned on, are blue at the moment 3, and 4 (index-0).\n\nExample 3:\nInput: light = [4,1,2,3]\nOutput: 1\nExplanation: All bulbs turned on, are blue at the moment 3 (index-0).\nBulb 4th changes to blue at the moment 3.\n\nExample 4:\nInput: light = [2,1,4,3,6,5]\nOutput: 3\n\nExample 5:\nInput: light = [1,2,3,4,5,6]\nOutput: 6\n\n \nConstraints:\n\nn == light.length\n1 <= n <= 5 * 10^4\nlight is a permutation of  [1, 2, ..., n]\n    \"\"\"\n",
+      "strategies": {
+        "cot": {
+          "thinking": "STEP 1 - UNDERSTAND: The input is a list of integers representing the order in which bulbs are turned on. The output is the number of moments when all turned-on bulbs are blue. A bulb turns blue if it is on and all previous bulbs (to the left) are also on. The examples show that we need to track the maximum bulb turned on so far and compare it to the current moment to determine if all bulbs up to that point are on. STEP 2 - PLAN: We can iterate through the list, keeping track of the maximum bulb turned on so far. At each step, if the maximum bulb turned on so far equals the current moment (index + 1), it means all bulbs up to that point are on, and we can increment our count. This approach is efficient with a time complexity of O(n) and space complexity of O(1). STEP 3 - EDGE CASES: The list can be of length 1, in which case the output is 1. The list can be in perfect order (1,2,3,...,n), in which case the output is n. The list can be in reverse order, in which case the output is 1. STEP 4 - IMPLEMENT: We will initialize a variable to track the maximum bulb turned on so far and a counter for the moments when all bulbs are blue. We will iterate through the list, update the maximum bulb, and check if it matches the current moment to increment the counter.",
+          "name": "numTimesAllBlue",
+          "code": "class Solution:\n    def numTimesAllBlue(self, light: List[int]) -> int:\n        max_bulb = 0\n        count = 0\n        for i, bulb in enumerate(light):\n            max_bulb = max(max_bulb, bulb)\n            if max_bulb == i + 1:\n                count += 1\n        return count",
+          "passed": true,
+          "error": "",
+          "test_results": [
+            {
+              "test_case": 1,
+              "passed": true,
+              "expected": "3",
+              "actual": "3",
+              "error": ""
+            }
+          ],
+          "pass_rate": "1/1"
+        },
+        "self_planning": {
+          "thinking": "To solve this problem, we need to determine the number of moments when all the bulbs that are turned on are blue. A bulb turns blue if it is on and all the bulbs to its left are also on. The key observation here is that at any moment `k`, all the turned-on bulbs will be blue if the first `k+1` bulbs (1 to `k+1`) are turned on by that moment. \n\n### Approach\n1. **Track the Rightmost Turned-On Bulb**: For each moment `k` (0-based index), we need to check if the rightmost bulb turned on so far is equal to the number of bulbs turned on (i.e., `k+1`). If they are equal, it means all bulbs from 1 to `k+1` are turned on, so all the currently turned-on bulbs are blue.\n2. **Count Valid Moments**: Initialize a variable to keep track of the maximum bulb number turned on so far. For each bulb turned on at position `i` in the `light` array, update this maximum. If the maximum value equals the current number of bulbs turned on (i.e., `i+1`), increment the count of valid moments.\n\n### Solution Plan\n1. **Initialize Variables**: \n   - `max_bulb` to keep track of the highest-numbered bulb turned on so far.\n   - `count` to count the number of valid moments where all turned-on bulbs are blue.\n2. **Iterate Through Each Moment**:\n   - For each bulb turned on at position `i` (0-based) in the `light` array, update `max_bulb` to be the maximum of its current value and the bulb number being turned on (`light[i]`).\n   - Check if `max_bulb` equals `i+1` (since `i+1` bulbs have been processed by moment `i`). If true, increment `count`.\n3. **Return the Result**: After processing all moments, return `count` as the result.\n\n### Explanation\n- **Tracking the Rightmost Bulb**: The idea is that the rightmost bulb turned on up to moment `k` must be exactly `k+1` for all bulbs from 1 to `k+1` to be on. This ensures that there are no gaps in the sequence of bulbs turned on, which is necessary for all bulbs to be blue.\n- **Example**: For `light = [2,1,3,5,4]`, the moments are:\n  - Moment 0: Turn on bulb 2. `max_bulb = 2`. Check if 2 == 1? No.\n  - Moment 1: Turn on bulb 1. `max_bulb = 2`. Check if 2 == 2? Yes. Count becomes 1.\n  - Moment 2: Turn on bulb 3. `max_bulb = 3`. Check if 3 == 3? Yes. Count becomes 2.\n  - Moment 3: Turn on bulb 5. `max_bulb = 5`. Check if 5 == 4? No.\n  - Moment 4: Turn on bulb 4. `max_bulb = 5`. Check if 5 == 5? Yes. Count becomes 3.\n  - The result is 3, which matches the example.\n\nThis approach efficiently checks each moment in linear time, making it optimal for the given constraints.",
+          "name": "numTimesAllBlue",
+          "code": "def numTimesAllBlue(self, light: List[int]) -> int:\n    max_bulb = 0\n    count = 0\n    for i in range(len(light)):\n        max_bulb = max(max_bulb, light[i])\n        if max_bulb == i + 1:\n            count += 1\n    return count",
+          "passed": false,
+          "error": "Some test cases failed",
+          "test_results": [
+            {
+              "test_case": 1,
+              "passed": false,
+              "expected": "[3]",
+              "actual": "",
+              "error": "numTimesAllBlue() missing 1 required positional argument: 'light'"
+            }
+          ],
+          "pass_rate": "0/1"
+        }
+      }
+    },
+    "problem_4": {
+      "prompt": "\nclass Solution:\n    def maxSizeSlices(self, slices: List[int]) -> int:\n            \"\"\"There is a pizza with 3n slices of varying size, you and your friends will take slices of pizza as follows:\n\nYou will pick any pizza slice.\nYour friend Alice will pick next slice in anti clockwise direction of your pick. \nYour friend Bob will pick next slice in clockwise direction of your pick.\nRepeat until there are no more slices of pizzas.\n\nSizes of Pizza slices is represented by circular array slices in clockwise direction.\nReturn the maximum possible sum of slice sizes which you can have.\n \nExample 1:\n\nInput: slices = [1,2,3,4,5,6]\nOutput: 10\nExplanation: Pick pizza slice of size 4, Alice and Bob will pick slices with size 3 and 5 respectively. Then Pick slices with size 6, finally Alice and Bob will pick slice of size 2 and 1 respectively. Total = 4 + 6.\n\nExample 2:\n\nInput: slices = [8,9,8,6,1,1]\nOutput: 16\nOutput: Pick pizza slice of size 8 in each turn. If you pick slice with size 9 your partners will pick slices of size 8.\n\nExample 3:\nInput: slices = [4,1,2,5,8,3,1,9,7]\nOutput: 21\n\nExample 4:\nInput: slices = [3,1,2]\nOutput: 3\n\n \nConstraints:\n\n1 <= slices.length <= 500\nslices.length % 3 == 0\n1 <= slices[i] <= 1000\n    \"\"\"\n",
+      "strategies": {
+        "cot": {
+          "thinking": "STEP 1 - UNDERSTAND: The problem involves selecting pizza slices from a circular array to maximize the sum of the selected slices. The selection process involves you, Alice, and Bob taking turns, with Alice and Bob always taking the adjacent slices in anti-clockwise and clockwise directions, respectively. The goal is to maximize the sum of the slices you pick. The input is a list of integers representing the sizes of the pizza slices, and the output is the maximum possible sum of the slices you can have. The constraints specify that the length of the list is a multiple of 3 and ranges from 1 to 500, with each slice size between 1 and 1000. STEP 2 - PLAN: This problem can be reduced to a variant of the House Robber problem, where you cannot select adjacent elements. Since the array is circular, we need to consider two scenarios: one where the first element is included and the last is excluded, and another where the first element is excluded and the last is included. We can use dynamic programming to solve this problem. We'll create a helper function that computes the maximum sum for a linear array, and then apply it to both scenarios. The time complexity is O(n^2), and the space complexity is O(n). STEP 3 - EDGE CASES: The edge cases include a single slice, all slices being of the same size, and the maximum and minimum slice sizes. We also need to handle the circular nature of the array correctly. STEP 4 - IMPLEMENT: We'll implement the solution using dynamic programming, considering the two scenarios for the circular array.",
+          "name": "maxSizeSlices",
+          "code": "class Solution:\n    def maxSizeSlices(self, slices: List[int]) -> int:\n        def dp(arr):\n            n = len(arr)\n            k = n // 3\n            dp = [[0] * (k + 1) for _ in range(n + 1)]\n            for i in range(1, n + 1):\n                for j in range(1, k + 1):\n                    dp[i][j] = max(dp[i - 1][j], (dp[i - 2][j - 1] if i >= 2 else 0) + arr[i - 1])\n            return dp[n][k]\n        return max(dp(slices[:-1]), dp(slices[1:]))",
+          "passed": false,
+          "error": "Some test cases failed",
+          "test_results": [
+            {
+              "test_case": 1,
+              "passed": false,
+              "expected": "10",
+              "actual": "6",
+              "error": "Output mismatch"
+            }
+          ],
+          "pass_rate": "0/1"
+        },
+        "self_planning": {
+          "thinking": "To solve this problem, we need to maximize the sum of pizza slices you can pick, given the constraints of the game. Here’s a step-by-step plan:\n\n1. **Understand the Problem**: \n   - You and your friends take turns picking slices from a circular pizza.\n   - You pick a slice, Alice picks the next slice in the anti-clockwise direction, and Bob picks the next slice in the clockwise direction.\n   - This process repeats until all slices are picked.\n   - The goal is to maximize the sum of the slices you pick.\n\n2. **Model the Problem**:\n   - The problem can be modeled as selecting non-adjacent slices from the circular array to maximize the sum.\n   - Since the array is circular, the first and last slices are adjacent.\n\n3. **Break Down the Problem**:\n   - To handle the circular nature, we can consider two cases:\n     - Case 1: You pick the first slice, so you cannot pick the last slice.\n     - Case 2: You do not pick the first slice, so you can pick the last slice.\n   - For each case, we need to find the maximum sum of non-adjacent slices.\n\n4. **Dynamic Programming Approach**:\n   - Use dynamic programming to solve the problem for each case.\n   - Define a DP array where `dp[i]` represents the maximum sum achievable up to the `i-th` slice.\n   - The recurrence relation is:\n     - `dp[i] = max(dp[i-1], dp[i-2] + slices[i])`\n   - Initialize `dp[0] = slices[0]` and `dp[1] = max(slices[0], slices[1])`.\n\n5. **Implement the Solution**:\n   - For Case 1: Apply the DP approach to the array `slices[0:n-1]` (excluding the last slice).\n   - For Case 2: Apply the DP approach to the array `slices[1:n]` (excluding the first slice).\n   - The final result is the maximum value obtained from both cases.\n\n6. **Return the Result**:\n   - Return the maximum sum obtained from the two cases.\n\nThis plan ensures that we consider all possible ways to pick slices while adhering to the constraints of the game.",
+          "name": "maxSizeSlices",
+          "code": "from typing import List\n\ndef maxSizeSlices(slices: List[int]) -> int:\n    def dp(arr):\n        n = len(arr)\n        if n == 0:\n            return 0\n        dp = [0] * n\n        dp[0] = arr[0]\n        if n > 1:\n            dp[1] = max(arr[0], arr[1])\n        for i in range(2, n):\n            dp[i] = max(dp[i-1], dp[i-2] + arr[i])\n        return dp[-1]\n    \n    n = len(slices)\n    if n == 0:\n        return 0\n    case1 = dp(slices[:-1])\n    case2 = dp(slices[1:])\n    return max(case1, case2)",
+          "passed": false,
+          "error": "Some test cases failed",
+          "test_results": [
+            {
+              "test_case": 1,
+              "passed": false,
+              "expected": "10",
+              "actual": "12",
+              "error": "Output mismatch"
+            }
+          ],
+          "pass_rate": "0/1"
+        }
+      }
+    },
+    "problem_5": {
+      "prompt": "\nclass Solution:\n    def distinctSubseqII(self, S: str) -> int:\n            \"\"\"Given a string S, count the number of distinct, non-empty subsequences of S .\nSince the result may be large, return the answer modulo 10^9 + 7.\n \nExample 1:\nInput: \"abc\"\nOutput: 7\nExplanation: The 7 distinct subsequences are \"a\", \"b\", \"c\", \"ab\", \"ac\", \"bc\", and \"abc\".\n\n\nExample 2:\nInput: \"aba\"\nOutput: 6\nExplanation: The 6 distinct subsequences are \"a\", \"b\", \"ab\", \"ba\", \"aa\" and \"aba\".\n\n\nExample 3:\nInput: \"aaa\"\nOutput: 3\nExplanation: The 3 distinct subsequences are \"a\", \"aa\" and \"aaa\".\n\n\n\n \n \nNote:\n\nS contains only lowercase letters.\n1 <= S.length <= 2000\n    \"\"\"\n",
+      "strategies": {
+        "cot": {
+          "thinking": "STEP 1 - UNDERSTAND: The input is a string S containing lowercase letters. The output is the count of distinct non-empty subsequences, modulo 10^9 + 7. Examples show that subsequences are formed by selecting characters in order but not necessarily consecutively. STEP 2 - PLAN: Use dynamic programming to count distinct subsequences. Initialize a DP array where dp[i] represents the number of distinct subsequences ending at S[i]. Use a dictionary to track the last occurrence of each character to avoid duplicates. Update the DP array by considering whether the current character has been seen before. The total count is the sum of all DP values, minus 1 to exclude the empty subsequence. Time complexity: O(n), Space complexity: O(n). STEP 3 - EDGE CASES: Single character string → return 1. All characters same → count equals string length. Long string → ensure modulo operation handles large numbers. STEP 4 - IMPLEMENT: Initialize DP array and last occurrence dictionary. Iterate through the string, updating DP and last occurrence. Return the sum of DP values modulo 10^9 + 7.",
+          "name": "distinctSubseqII",
+          "code": "class Solution:\n    def distinctSubseqII(self, S: str) -> int:\n        MOD = 10**9 + 7\n        dp = [1] * len(S)\n        last = {}\n        for i, char in enumerate(S):\n            if char in last:\n                dp[i] = (sum(dp[:i]) + 1) % MOD\n                dp[i] = (dp[i] - dp[last[char]] + MOD) % MOD\n            else:\n                dp[i] = (sum(dp[:i]) + 1) % MOD\n            last[char] = i\n        return (sum(dp) - 1) % MOD",
+          "passed": false,
+          "error": "Some test cases failed",
+          "test_results": [
+            {
+              "test_case": 1,
+              "passed": false,
+              "expected": "7",
+              "actual": "6",
+              "error": "Output mismatch"
+            }
+          ],
+          "pass_rate": "0/1"
+        },
+        "self_planning": {
+          "thinking": "To solve the problem of counting distinct non-empty subsequences of a string \\( S \\), follow these steps:\n\n1. **Initialize Variables**:\n   - Create a dictionary `last_occurrence` to store the last index where each character appeared.\n   - Initialize a list `dp` where `dp[i]` represents the number of distinct subsequences ending at index \\( i \\).\n   - Set `dp[0]` to 1, representing the empty subsequence.\n\n2. **Iterate Through the String**:\n   - For each character in \\( S \\) at index \\( i \\):\n     - Calculate `dp[i]` as twice the value of `dp[i-1]`. This accounts for all previous subsequences, either including or excluding the current character.\n     - If the current character has appeared before, subtract the number of subsequences that ended at its last occurrence to avoid duplicates.\n     - Update `last_occurrence` with the current index for the character.\n\n3. **Handle Modulo Operation**:\n   - Since the result can be large, take modulo \\( 10^9 + 7 \\) at each step to keep the numbers manageable.\n\n4. **Return the Result**:\n   - The total number of distinct non-empty subsequences is `dp[-1] - 1` (subtracting the empty subsequence).\n   - Return the result modulo \\( 10^9 + 7 \\).\n\nThis approach ensures that all distinct subsequences are counted efficiently while avoiding duplicates.",
+          "name": "distinctSubseqII",
+          "code": "def distinctSubseqII(S: str) -> int:\n    MOD = 10**9 + 7\n    n = len(S)\n    dp = [0] * (n + 1)\n    dp[0] = 1\n    last_occurrence = {}\n    \n    for i in range(1, n + 1):\n        dp[i] = (2 * dp[i - 1]) % MOD\n        if S[i - 1] in last_occurrence:\n            dp[i] = (dp[i] - dp[last_occurrence[S[i - 1]] - 1]) % MOD\n        last_occurrence[S[i - 1]] = i\n    \n    return (dp[n] - 1) % MOD",
+          "passed": true,
+          "error": "",
+          "test_results": [
+            {
+              "test_case": 1,
+              "passed": true,
+              "expected": "7",
+              "actual": "7",
+              "error": ""
+            }
+          ],
+          "pass_rate": "1/1"
+        }
+      }
+    },
+    "problem_6": {
+      "prompt": "\nclass Solution:\n    def movesToMakeZigzag(self, nums: List[int]) -> int:\n            \"\"\"Given an array nums of integers, a move consists of choosing any element and decreasing it by 1.\nAn array A is a zigzag array if either:\n\nEvery even-indexed element is greater than adjacent elements, ie. A[0] > A[1] < A[2] > A[3] < A[4] > ...\nOR, every odd-indexed element is greater than adjacent elements, ie. A[0] < A[1] > A[2] < A[3] > A[4] < ...\n\nReturn the minimum number of moves to transform the given array nums into a zigzag array.\n \nExample 1:\nInput: nums = [1,2,3]\nOutput: 2\nExplanation: We can decrease 2 to 0 or 3 to 1.\n\nExample 2:\nInput: nums = [9,6,1,6,2]\nOutput: 4\n\n \nConstraints:\n\n1 <= nums.length <= 1000\n1 <= nums[i] <= 1000\n    \"\"\"\n",
+      "strategies": {
+        "cot": {
+          "thinking": "STEP 1 - UNDERSTAND: The input is a list of integers, and the output is an integer representing the minimum number of moves needed to make the list zigzag. A zigzag array alternates between peaks and valleys. We need to consider two scenarios: one where even indices are peaks, and another where odd indices are peaks. For each scenario, we calculate the number of moves required to make the array zigzag and return the minimum of the two. STEP 2 - PLAN: We'll iterate through the list and for each element, compare it with its neighbors. Depending on the scenario (even peaks or odd peaks), we'll calculate the necessary moves to make the current element a peak or valley. We'll keep track of the total moves for both scenarios and return the minimum. Time complexity is O(n), and space complexity is O(1). STEP 3 - EDGE CASES: Single element list → no moves needed. List with two elements → need to make one element smaller than the other. List with all equal elements → need to make alternating elements smaller. List with elements already in zigzag order → no moves needed. STEP 4 - IMPLEMENT: We'll implement the logic by iterating through the list and calculating the moves for both scenarios, then returning the minimum.",
+          "name": "movesToMakeZigzag",
+          "code": "class Solution:\n    def movesToMakeZigzag(self, nums: List[int]) -> int:\n        even_moves = 0\n        odd_moves = 0\n        for i in range(len(nums)):\n            left = nums[i-1] if i > 0 else float('inf')\n            right = nums[i+1] if i < len(nums)-1 else float('inf')\n            if i % 2 == 0:\n                even_moves += max(0, nums[i] - min(left, right) + 1)\n            else:\n                odd_moves += max(0, nums[i] - min(left, right) + 1)\n        return min(even_moves, odd_moves)",
+          "passed": true,
+          "error": "",
+          "test_results": [
+            {
+              "test_case": 1,
+              "passed": true,
+              "expected": "2",
+              "actual": "2",
+              "error": ""
+            }
+          ],
+          "pass_rate": "1/1"
+        },
+        "self_planning": {
+          "thinking": "1. **Initialize two counters**: Create two variables, `even_moves` and `odd_moves`, to keep track of the number of moves required for each zigzag pattern (even-indexed elements greater than neighbors and odd-indexed elements greater than neighbors).\n\n2. **Iterate through the array**: Loop through the array `nums` using an index `i`.\n\n3. **Calculate moves for even-indexed pattern**:\n   - If `i` is even, ensure `nums[i]` is greater than both its left and right neighbors.\n   - Calculate the required decrease for `nums[i]` to be greater than its left neighbor (if it exists) and right neighbor (if it exists).\n   - Add the maximum required decrease to `even_moves`.\n\n4. **Calculate moves for odd-indexed pattern**:\n   - If `i` is odd, ensure `nums[i]` is greater than both its left and right neighbors.\n   - Calculate the required decrease for `nums[i]` to be greater than its left neighbor (if it exists) and right neighbor (if it exists).\n   - Add the maximum required decrease to `odd_moves`.\n\n5. **Return the minimum moves**: After the loop, return the smaller value between `even_moves` and `odd_moves`, as it represents the minimum number of moves required to transform the array into a zigzag pattern.",
+          "name": "movesToMakeZigzag",
+          "code": "def movesToMakeZigzag(nums):\n    even_moves = 0\n    odd_moves = 0\n    n = len(nums)\n    for i in range(n):\n        left = nums[i - 1] if i > 0 else float('inf')\n        right = nums[i + 1] if i < n - 1 else float('inf')\n        if i % 2 == 0:\n            even_moves += max(0, nums[i] - min(left, right) + 1)\n        else:\n            odd_moves += max(0, nums[i] - min(left, right) + 1)\n    return min(even_moves, odd_moves)",
+          "passed": true,
+          "error": "",
+          "test_results": [
+            {
+              "test_case": 1,
+              "passed": true,
+              "expected": "2",
+              "actual": "2",
+              "error": ""
+            }
+          ],
+          "pass_rate": "1/1"
+        }
+      }
+    },
+    "problem_7": {
+      "prompt": "\nclass Solution:\n    def longestWPI(self, hours: List[int]) -> int:\n            \"\"\"We are given hours, a list of the number of hours worked per day for a given employee.\nA day is considered to be a tiring day if and only if the number of hours worked is (strictly) greater than 8.\nA well-performing interval is an interval of days for which the number of tiring days is strictly larger than the number of non-tiring days.\nReturn the length of the longest well-performing interval.\n \nExample 1:\nInput: hours = [9,9,6,0,6,6,9]\nOutput: 3\nExplanation: The longest well-performing interval is [9,9,6].\n\n \nConstraints:\n\n1 <= hours.length <= 10000\n0 <= hours[i] <= 16\n    \"\"\"\n",
+      "strategies": {
+        "cot": {
+          "thinking": "STEP 1 - UNDERSTAND: The input is a list of integers representing hours worked per day. A tiring day is when hours > 8. We need to find the longest interval where the number of tiring days is greater than non-tiring days. Example: [9,9,6,0,6,6,9] → longest interval is [9,9,6] with length 3. STEP 2 - PLAN: Use a prefix sum approach to track the balance between tiring and non-tiring days. Initialize a dictionary to store the first occurrence of each balance. Iterate through the list, updating the balance and checking if the current balance indicates a well-performing interval. Track the maximum length found. Time: O(n), Space: O(n). STEP 3 - EDGE CASES: Empty list → return 0. All tiring days → return length of list. All non-tiring days → return 0. Single tiring day → return 1. STEP 4 - IMPLEMENT: Use a dictionary to store the first occurrence of each balance and iterate through the list to find the maximum interval length.",
+          "name": "longestWPI",
+          "code": "class Solution:\n    def longestWPI(self, hours: List[int]) -> int:\n        balance = 0\n        max_len = 0\n        first_occurrence = {}\n        for i, h in enumerate(hours):\n            balance += 1 if h > 8 else -1\n            if balance > 0:\n                max_len = i + 1\n            else:\n                if balance not in first_occurrence:\n                    first_occurrence[balance] = i\n                if balance - 1 in first_occurrence:\n                    max_len = max(max_len, i - first_occurrence[balance - 1])\n        return max_len",
+          "passed": true,
+          "error": "",
+          "test_results": [
+            {
+              "test_case": 1,
+              "passed": true,
+              "expected": "3",
+              "actual": "3",
+              "error": ""
+            }
+          ],
+          "pass_rate": "1/1"
+        },
+        "self_planning": {
+          "thinking": "### Step-by-Step Solution Plan:\n\n1. **Initialize Variables:**\n   - Create a variable `max_length` to store the length of the longest well-performing interval. Initialize it to 0.\n   - Create a variable `score` to keep track of the cumulative score (tiring days - non-tiring days). Initialize it to 0.\n   - Create a dictionary `score_indices` to store the first occurrence of each score. Initialize it with `{0: -1}` to handle the case where the interval starts from the beginning.\n\n2. **Iterate Through the Hours List:**\n   - Loop through the `hours` list using an index `i` and the corresponding value `hour`.\n\n3. **Calculate the Score:**\n   - For each `hour`, update the `score`:\n     - If `hour > 8`, increment the `score` by 1.\n     - Otherwise, decrement the `score` by 1.\n\n4. **Check for Well-Performing Interval:**\n   - If the `score` is greater than 0, it means the interval from the start to the current index is a well-performing interval. Update `max_length` to `i + 1`.\n   - If the `score` is not greater than 0, check if `score - 1` exists in `score_indices`. If it does, calculate the length of the interval as `i - score_indices[score - 1]` and update `max_length` if this length is greater than the current `max_length`.\n\n5. **Store the First Occurrence of the Score:**\n   - If the current `score` is not in `score_indices`, store the current index `i` in `score_indices` with the key `score`.\n\n6. **Return the Result:**\n   - After the loop ends, return `max_length` as the length of the longest well-performing interval.\n\n### Summary:\nThis plan uses a cumulative score approach to track the difference between tiring and non-tiring days. By storing the first occurrence of each score, we can efficiently determine the longest interval where the number of tiring days exceeds the number of non-tiring days.",
+          "name": "longestWPI",
+          "code": "def longestWPI(hours):\n    max_length = 0\n    score = 0\n    score_indices = {0: -1}\n    \n    for i, hour in enumerate(hours):\n        if hour > 8:\n            score += 1\n        else:\n            score -= 1\n        \n        if score > 0:\n            max_length = i + 1\n        else:\n            if score - 1 in score_indices:\n                max_length = max(max_length, i - score_indices[score - 1])\n        \n        if score not in score_indices:\n            score_indices[score] = i\n    \n    return max_length",
+          "passed": true,
+          "error": "",
+          "test_results": [
+            {
+              "test_case": 1,
+              "passed": true,
+              "expected": "3",
+              "actual": "3",
+              "error": ""
+            }
+          ],
+          "pass_rate": "1/1"
+        }
+      }
+    },
+    "problem_8": {
+      "prompt": "\nclass Solution:\n    def findPoisonedDuration(self, timeSeries: List[int], duration: int) -> int:\n            \"\"\"In LOL world, there is a hero called Teemo and his attacking can make his enemy Ashe be in poisoned condition. Now, given the Teemo's attacking ascending time series towards Ashe and the poisoning time duration per Teemo's attacking, you need to output the total time that Ashe is in poisoned condition.\n\n\nYou may assume that Teemo attacks at the very beginning of a specific time point, and makes Ashe be in poisoned condition immediately.\n\nExample 1:\n\nInput: [1,4], 2\nOutput: 4\nExplanation: At time point 1, Teemo starts attacking Ashe and makes Ashe be poisoned immediately. This poisoned status will last 2 seconds until the end of time point 2. And at time point 4, Teemo attacks Ashe again, and causes Ashe to be in poisoned status for another 2 seconds. So you finally need to output 4.\n\n\n\n\nExample 2:\n\nInput: [1,2], 2\nOutput: 3\nExplanation: At time point 1, Teemo starts attacking Ashe and makes Ashe be poisoned. This poisoned status will last 2 seconds until the end of time point 2. However, at the beginning of time point 2, Teemo attacks Ashe again who is already in poisoned status. Since the poisoned status won't add up together, though the second poisoning attack will still work at time point 2, it will stop at the end of time point 3. So you finally need to output 3.\n\n\n\n\nNote:\n\nYou may assume the length of given time series array won't exceed 10000.\nYou may assume the numbers in the Teemo's attacking time series and his poisoning time duration per attacking are non-negative integers, which won't exceed 10,000,000.\n    \"\"\"\n",
+      "strategies": {
+        "cot": {
+          "thinking": "STEP 1 - UNDERSTAND: The problem involves calculating the total time Ashe is poisoned based on Teemo's attack times and the duration of each poison. The key is to handle overlapping poison durations correctly. If attacks are close enough that the next attack starts before the previous poison ends, we don't add the full duration but only the difference between the next attack time and the previous attack time plus the duration. Example 1: [1,4], 2 → 2 (from 1-3) + 2 (from 4-6) = 4. Example 2: [1,2], 2 → 1-3 and 2-4 overlap, so total is 3 (1-3). STEP 2 - PLAN: Iterate through the time series, for each attack, add the minimum of the duration or the difference to the next attack. For the last attack, always add the full duration. Time complexity is O(n) where n is the length of timeSeries. Space complexity is O(1). STEP 3 - EDGE CASES: Empty timeSeries → return 0. Single attack → return duration. Attacks exactly duration apart → sum is n*duration. Attacks overlapping → handle as in example 2. STEP 4 - IMPLEMENT: Initialize total to 0. For each attack except the last, add min(duration, next attack - current attack). For the last attack, add duration.",
+          "name": "findPoisonedDuration",
+          "code": "class Solution:\n    def findPoisonedDuration(self, timeSeries: List[int], duration: int) -> int:\n        if not timeSeries:\n            return 0\n        total = 0\n        for i in range(len(timeSeries) - 1):\n            total += min(duration, timeSeries[i+1] - timeSeries[i])\n        return total + duration",
+          "passed": true,
+          "error": "",
+          "test_results": [
+            {
+              "test_case": 1,
+              "passed": true,
+              "expected": "4",
+              "actual": "4",
+              "error": ""
+            }
+          ],
+          "pass_rate": "1/1"
+        },
+        "self_planning": {
+          "thinking": "1. **Initialize Variables**: Start by initializing a variable `total_duration` to 0 to keep track of the total poisoned time.\n\n2. **Iterate Through Time Series**: Loop through the `timeSeries` array from the first element to the second last element.\n\n3. **Calculate Duration for Each Attack**:\n   - For each attack at `timeSeries[i]`, calculate the end time of the poisoning effect as `timeSeries[i] + duration`.\n   - Compare this end time with the start time of the next attack `timeSeries[i+1]`.\n   - If the end time is less than or equal to the next attack time, add the full `duration` to `total_duration`.\n   - If the end time is greater than the next attack time, add the difference between `timeSeries[i+1]` and `timeSeries[i]` to `total_duration`.\n\n4. **Handle the Last Attack**: After the loop, add the full `duration` of the last attack in the `timeSeries` to `total_duration`.\n\n5. **Return the Result**: Return the `total_duration` as the final result.\n\nThis plan ensures that overlapping poisoning durations are correctly handled and the total poisoned time is accurately calculated.",
+          "name": "findPoisonedDuration",
+          "code": "def findPoisonedDuration(timeSeries: List[int], duration: int) -> int:\n    if not timeSeries:\n        return 0\n    total_duration = 0\n    for i in range(len(timeSeries) - 1):\n        total_duration += min(timeSeries[i + 1] - timeSeries[i], duration)\n    total_duration += duration\n    return total_duration",
+          "passed": true,
+          "error": "",
+          "test_results": [
+            {
+              "test_case": 1,
+              "passed": true,
+              "expected": "4",
+              "actual": "4",
+              "error": ""
+            }
+          ],
+          "pass_rate": "1/1"
+        }
+      }
+    },
+    "problem_9": {
+      "prompt": "\nclass Solution:\n    def canConstruct(self, s: str, k: int) -> bool:\n            \"\"\"Given a string s and an integer k. You should construct k non-empty palindrome strings using all the characters in s.\nReturn True if you can use all the characters in s to construct k palindrome strings or False otherwise.\n \nExample 1:\nInput: s = \"annabelle\", k = 2\nOutput: true\nExplanation: You can construct two palindromes using all characters in s.\nSome possible constructions \"anna\" + \"elble\", \"anbna\" + \"elle\", \"anellena\" + \"b\"\n\nExample 2:\nInput: s = \"leetcode\", k = 3\nOutput: false\nExplanation: It is impossible to construct 3 palindromes using all the characters of s.\n\nExample 3:\nInput: s = \"true\", k = 4\nOutput: true\nExplanation: The only possible solution is to put each character in a separate string.\n\nExample 4:\nInput: s = \"yzyzyzyzyzyzyzy\", k = 2\nOutput: true\nExplanation: Simply you can put all z's in one string and all y's in the other string. Both strings will be palindrome.\n\nExample 5:\nInput: s = \"cr\", k = 7\nOutput: false\nExplanation: We don't have enough characters in s to construct 7 palindromes.\n\n \nConstraints:\n\n1 <= s.length <= 10^5\nAll characters in s are lower-case English letters.\n1 <= k <= 10^5\n    \"\"\"\n",
+      "strategies": {
+        "cot": {
+          "thinking": "STEP 1 - UNDERSTAND: The input is a string s and an integer k. We need to determine if we can construct k palindromes using all characters in s. A palindrome reads the same forwards and backwards. Examples show that we need to consider character counts and how they can be distributed into palindromes. STEP 2 - PLAN: For a string to be split into k palindromes, the number of characters with odd counts must be <= k, and the total number of characters must be >= k. We'll count the frequency of each character, determine how many have odd counts, and check if these conditions are met. Time complexity: O(n) to count characters, where n is the length of s. Space complexity: O(1) since we're using a fixed-size frequency array for lowercase letters. STEP 3 - EDGE CASES: Empty string → return False if k > 0. Single character → always True if k == 1. All characters same → can form any k <= len(s). More k than characters → False. STEP 4 - IMPLEMENT: Use a frequency counter, count odd frequencies, and check the conditions.",
+          "name": "canConstruct",
+          "code": "class Solution:\n    def canConstruct(self, s: str, k: int) -> bool:\n        if len(s) < k:\n            return False\n        freq = [0] * 26\n        for char in s:\n            freq[ord(char) - ord('a')] += 1\n        odd_count = sum(1 for count in freq if count % 2 != 0)\n        return odd_count <= k",
+          "passed": true,
+          "error": "",
+          "test_results": [
+            {
+              "test_case": 1,
+              "passed": true,
+              "expected": "True",
+              "actual": "True",
+              "error": ""
+            }
+          ],
+          "pass_rate": "1/1"
+        },
+        "self_planning": {
+          "thinking": "1. **Check if the number of characters in `s` is at least `k`**: \n   - If the length of `s` is less than `k`, it is impossible to construct `k` non-empty palindromes. Return `False`.\n\n2. **Count the frequency of each character in `s`**:\n   - Use a frequency map or counter to count how many times each character appears in `s`.\n\n3. **Determine the number of characters with odd frequencies**:\n   - Iterate through the frequency map and count how many characters have an odd frequency.\n\n4. **Check if the number of palindromes `k` is feasible**:\n   - A palindrome can have at most one character with an odd frequency (for the middle character in odd-length palindromes).\n   - Therefore, the number of palindromes `k` must be greater than or equal to the number of characters with odd frequencies.\n   - If `k` is less than the number of characters with odd frequencies, return `False`.\n\n5. **Return `True` if all conditions are satisfied**:\n   - If the above checks pass, return `True` indicating that it is possible to construct `k` palindromes using all characters in `s`.",
+          "name": "canConstruct",
+          "code": "from collections import Counter\n\ndef canConstruct(s: str, k: int) -> bool:\n    if len(s) < k:\n        return False\n    \n    freq = Counter(s)\n    odd_count = sum(1 for count in freq.values() if count % 2 != 0)\n    \n    if odd_count > k:\n        return False\n    \n    return True",
+          "passed": true,
+          "error": "",
+          "test_results": [
+            {
+              "test_case": 1,
+              "passed": true,
+              "expected": "True",
+              "actual": "True",
+              "error": ""
+            }
+          ],
+          "pass_rate": "1/1"
+        }
+      }
+    }
+  },
+  "summary": {
+    "cot": {
+      "total_problems": 10,
+      "fully_passed": 8,
+      "pass_rate": "8/10 (80.0%)"
+    },
+    "self_planning": {
+      "total_problems": 10,
+      "fully_passed": 8,
+      "pass_rate": "8/10 (80.0%)"
+    }
+  }
+}

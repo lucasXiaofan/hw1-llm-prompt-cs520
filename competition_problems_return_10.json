@@ -1,0 +1,519 @@
+[
+    {
+        "prompt": "\nclass Solution:\n    def subarraysWithKDistinct(self, A: List[int], K: int) -> int:\n            \"\"\"Given an array A of positive integers, call a (contiguous, not necessarily distinct) subarray of A good if the number of different integers in that subarray is exactly K.\n(For example, [1,2,3,1,2] has 3 different integers: 1, 2, and 3.)\nReturn the number of good subarrays of A.\n \nExample 1:\nInput: A = [1,2,1,2,3], K = 2\nOutput: 7\nExplanation: Subarrays formed with exactly 2 different integers: [1,2], [2,1], [1,2], [2,3], [1,2,1], [2,1,2], [1,2,1,2].\n\nExample 2:\nInput: A = [1,2,1,3,4], K = 3\nOutput: 3\nExplanation: Subarrays formed with exactly 3 different integers: [1,2,1,3], [2,1,3], [1,3,4].\n\n \nNote:\n\n1 <= A.length <= 20000\n1 <= A[i] <= A.length\n1 <= K <= A.length\n    \"\"\"\n",
+        "canonical_solution": "from collections import defaultdict\nclass Solution:\n    def subarraysWithKDistinct(self, A: List[int], K: int) -> int:\n        \n        start_k = 0\n        start = 0\n        elem_dict = defaultdict(int)\n        \n        ans = 0\n        \n        for elem in A:\n            elem_dict[elem] += 1\n            \n            if len(elem_dict) > K:\n                del elem_dict[A[start_k]]\n                start_k+=1\n                start = start_k\n                \n                \n            if len(elem_dict) == K:\n                while elem_dict[A[start_k]] > 1:\n                    elem_dict[A[start_k]]-=1\n                    start_k+=1\n                    \n                ans = ans + start_k - start + 1\n                \n        return ans\n                \n                \n                \n",
+        "inputs": [
+            [
+                [
+                    1,
+                    2,
+                    1,
+                    2,
+                    3
+                ],
+                2
+            ]
+        ],
+        "outputs": [
+            [
+                7
+            ]
+        ],
+        "starter_code": "\nclass Solution:\n    def subarraysWithKDistinct(self, A: List[int], K: int) -> int:\n        ",
+        "scope": [
+            [
+                "Class Body",
+                2,
+                27
+            ],
+            [
+                "Function Body",
+                3,
+                27
+            ],
+            [
+                "For Loop Body",
+                11,
+                25
+            ],
+            [
+                "If Statement Body",
+                14,
+                17
+            ],
+            [
+                "If Statement Body",
+                20,
+                25
+            ],
+            [
+                "While Loop Body",
+                21,
+                23
+            ]
+        ],
+        "difficulty": "interview"
+    },
+    {
+        "prompt": "\nclass Solution:\n    def minNumberOfFrogs(self, croakOfFrogs: str) -> int:\n            \"\"\"Given the string croakOfFrogs, which represents a combination of the string \"croak\" from different frogs, that is, multiple frogs can croak at the same time, so multiple “croak” are mixed. Return the minimum number of different frogs to finish all the croak in the given string.\nA valid \"croak\" means a frog is printing 5 letters ‘c’, ’r’, ’o’, ’a’, ’k’ sequentially. The frogs have to print all five letters to finish a croak. If the given string is not a combination of valid \"croak\" return -1.\n \nExample 1:\nInput: croakOfFrogs = \"croakcroak\"\nOutput: 1 \nExplanation: One frog yelling \"croak\" twice.\n\nExample 2:\nInput: croakOfFrogs = \"crcoakroak\"\nOutput: 2 \nExplanation: The minimum number of frogs is two. \nThe first frog could yell \"crcoakroak\".\nThe second frog could yell later \"crcoakroak\".\n\nExample 3:\nInput: croakOfFrogs = \"croakcrook\"\nOutput: -1\nExplanation: The given string is an invalid combination of \"croak\" from different frogs.\n\nExample 4:\nInput: croakOfFrogs = \"croakcroa\"\nOutput: -1\n\n \nConstraints:\n\n1 <= croakOfFrogs.length <= 10^5\nAll characters in the string are: 'c', 'r', 'o', 'a' or 'k'.\n    \"\"\"\n",
+        "canonical_solution": "class Solution:\n    def minNumberOfFrogs(self, croakOfFrogs: str) -> int:\n        # valid string? can be seperated into full croaks:\n        ### dict of letters. c, r, o, a, k should all be equal, nothing else in\n        if len(croakOfFrogs)%5!=0 or croakOfFrogs[0]!='c' or croakOfFrogs[-1]!='k':\n            return -1\n        \n        letters = {\n            'c': 0,\n            'r': 0,\n            'o': 0,\n            'a': 0,\n            'k': 0\n        }\n        \n        frogs = 0\n        temp = 0\n        \n        for l in croakOfFrogs:\n            letters[l] += 1\n            temp = letters['c'] - letters['k']\n            if temp > frogs:\n                frogs = temp\n                \n               \n        c_count = letters['c']\n        for letter in letters:\n            if letters[letter] != c_count:\n                return -1\n            \n        return frogs",
+        "inputs": [
+            [
+                "\"croakcroak\""
+            ]
+        ],
+        "outputs": [
+            [
+                1
+            ]
+        ],
+        "starter_code": "\nclass Solution:\n    def minNumberOfFrogs(self, croakOfFrogs: str) -> int:\n        ",
+        "scope": [
+            [
+                "Class Body",
+                1,
+                31
+            ],
+            [
+                "Function Body",
+                2,
+                31
+            ],
+            [
+                "If Statement Body",
+                5,
+                6
+            ],
+            [
+                "For Loop Body",
+                19,
+                23
+            ],
+            [
+                "If Statement Body",
+                22,
+                23
+            ],
+            [
+                "For Loop Body",
+                27,
+                29
+            ],
+            [
+                "If Statement Body",
+                28,
+                29
+            ]
+        ],
+        "difficulty": "interview"
+    },
+    {
+        "prompt": "\nclass Solution:\n    def nextGreaterElement(self, n: int) -> int:\n            \"\"\"Given a positive 32-bit integer n, you need to find the smallest 32-bit integer which has exactly the same digits existing in the integer n and is greater in value than n. If no such positive 32-bit integer exists, you need to return -1.\n\nExample 1:\n\n\nInput: 12\nOutput: 21\n\n\n \n\nExample 2:\n\n\nInput: 21\nOutput: -1\n    \"\"\"\n",
+        "canonical_solution": "class Solution:\n     def nextGreaterElement(self, n):\n         \"\"\"\n         :type n: int\n         :rtype: int\n         \"\"\"\n         s=[i for i in str(n)]\n         exist=-1\n         for i in range(len(s)-1,0,-1):\n             if s[i-1]<s[i]:\n                 temp=sorted(s[i-1:])\n                 pivot=temp.index(s[i-1])\n                 for j in range(pivot+1,len(temp)):\n                     if temp[j]>s[i-1]:\n                         pivot=j\n                         break\n                 \n                 s[i-1]=temp[pivot]\n                 del temp[pivot]\n                 s[i:]=temp\n                 exist=1\n                 break\n         ret=int(''.join(s))\n         if exist==1 and ret<2147483647 :\n             return ret\n         else:\n             return -1",
+        "inputs": [
+            [
+                12
+            ]
+        ],
+        "outputs": [
+            [
+                21
+            ]
+        ],
+        "starter_code": "\nclass Solution:\n    def nextGreaterElement(self, n: int) -> int:\n        ",
+        "scope": [
+            [
+                "Class Body",
+                1,
+                27
+            ],
+            [
+                "Function Body",
+                2,
+                27
+            ],
+            [
+                "List Comprehension",
+                7,
+                7
+            ],
+            [
+                "For Loop Body",
+                9,
+                22
+            ],
+            [
+                "If Statement Body",
+                10,
+                22
+            ],
+            [
+                "For Loop Body",
+                13,
+                16
+            ],
+            [
+                "If Statement Body",
+                14,
+                16
+            ],
+            [
+                "If Statement Body",
+                24,
+                27
+            ]
+        ],
+        "difficulty": "interview"
+    },
+    {
+        "prompt": "\nclass Solution:\n    def numTimesAllBlue(self, light: List[int]) -> int:\n            \"\"\"There is a room with n bulbs, numbered from 1 to n, arranged in a row from left to right. Initially, all the bulbs are turned off.\nAt moment k (for k from 0 to n - 1), we turn on the light[k] bulb. A bulb change color to blue only if it is on and all the previous bulbs (to the left) are turned on too.\nReturn the number of moments in which all turned on bulbs are blue.\n \nExample 1:\n\nInput: light = [2,1,3,5,4]\nOutput: 3\nExplanation: All bulbs turned on, are blue at the moment 1, 2 and 4.\n\nExample 2:\nInput: light = [3,2,4,1,5]\nOutput: 2\nExplanation: All bulbs turned on, are blue at the moment 3, and 4 (index-0).\n\nExample 3:\nInput: light = [4,1,2,3]\nOutput: 1\nExplanation: All bulbs turned on, are blue at the moment 3 (index-0).\nBulb 4th changes to blue at the moment 3.\n\nExample 4:\nInput: light = [2,1,4,3,6,5]\nOutput: 3\n\nExample 5:\nInput: light = [1,2,3,4,5,6]\nOutput: 6\n\n \nConstraints:\n\nn == light.length\n1 <= n <= 5 * 10^4\nlight is a permutation of  [1, 2, ..., n]\n    \"\"\"\n",
+        "canonical_solution": "class Solution:\n    def numTimesAllBlue(self, light: List[int]) -> int:\n        right = 0\n        ans = 0\n        for i in range(len(light)):\n            if (light[i] > right):\n                right = light[i]\n            \n            if (i + 1 == right):\n                ans += 1\n                \n        return ans",
+        "inputs": [
+            [
+                [
+                    2,
+                    1,
+                    3,
+                    5,
+                    4
+                ]
+            ]
+        ],
+        "outputs": [
+            [
+                3
+            ]
+        ],
+        "starter_code": "\nclass Solution:\n    def numTimesAllBlue(self, light: List[int]) -> int:\n        ",
+        "scope": [
+            [
+                "Class Body",
+                1,
+                12
+            ],
+            [
+                "Function Body",
+                2,
+                12
+            ],
+            [
+                "For Loop Body",
+                5,
+                10
+            ],
+            [
+                "If Statement Body",
+                6,
+                7
+            ],
+            [
+                "If Statement Body",
+                9,
+                10
+            ]
+        ],
+        "difficulty": "interview"
+    },
+    {
+        "prompt": "\nclass Solution:\n    def maxSizeSlices(self, slices: List[int]) -> int:\n            \"\"\"There is a pizza with 3n slices of varying size, you and your friends will take slices of pizza as follows:\n\nYou will pick any pizza slice.\nYour friend Alice will pick next slice in anti clockwise direction of your pick. \nYour friend Bob will pick next slice in clockwise direction of your pick.\nRepeat until there are no more slices of pizzas.\n\nSizes of Pizza slices is represented by circular array slices in clockwise direction.\nReturn the maximum possible sum of slice sizes which you can have.\n \nExample 1:\n\nInput: slices = [1,2,3,4,5,6]\nOutput: 10\nExplanation: Pick pizza slice of size 4, Alice and Bob will pick slices with size 3 and 5 respectively. Then Pick slices with size 6, finally Alice and Bob will pick slice of size 2 and 1 respectively. Total = 4 + 6.\n\nExample 2:\n\nInput: slices = [8,9,8,6,1,1]\nOutput: 16\nOutput: Pick pizza slice of size 8 in each turn. If you pick slice with size 9 your partners will pick slices of size 8.\n\nExample 3:\nInput: slices = [4,1,2,5,8,3,1,9,7]\nOutput: 21\n\nExample 4:\nInput: slices = [3,1,2]\nOutput: 3\n\n \nConstraints:\n\n1 <= slices.length <= 500\nslices.length % 3 == 0\n1 <= slices[i] <= 1000\n    \"\"\"\n",
+        "canonical_solution": "class Solution:\n    def maxSizeSlices(self, slices: List[int]) -> int:\n        a,b,n=[slices[0]],[0],len(slices)\n        for i in range(1,n):\n            a.append(max(a[-1],slices[i]))\n            b.append(max(b[-1],slices[i]))\n        for i in range(2,2*n//3,2):\n            aa,bb=[0]*(n-1),[0]*n\n            for j in range(i,n-1): aa[j]=max(aa[j-1],a[j-2]+slices[j])\n            for j in range(i+1,n): bb[j]=max(bb[j-1],b[j-2]+slices[j])\n            a,b=aa,bb\n        return max(a[-1],b[-1])",
+        "inputs": [
+            [
+                [
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6
+                ]
+            ]
+        ],
+        "outputs": [
+            [
+                10
+            ]
+        ],
+        "starter_code": "\nclass Solution:\n    def maxSizeSlices(self, slices: List[int]) -> int:\n        ",
+        "scope": [
+            [
+                "Class Body",
+                1,
+                12
+            ],
+            [
+                "Function Body",
+                2,
+                12
+            ],
+            [
+                "For Loop Body",
+                4,
+                6
+            ],
+            [
+                "For Loop Body",
+                7,
+                11
+            ],
+            [
+                "For Loop Body",
+                9,
+                9
+            ],
+            [
+                "For Loop Body",
+                10,
+                10
+            ]
+        ],
+        "difficulty": "interview"
+    },
+    {
+        "prompt": "\nclass Solution:\n    def distinctSubseqII(self, S: str) -> int:\n            \"\"\"Given a string S, count the number of distinct, non-empty subsequences of S .\nSince the result may be large, return the answer modulo 10^9 + 7.\n \nExample 1:\nInput: \"abc\"\nOutput: 7\nExplanation: The 7 distinct subsequences are \"a\", \"b\", \"c\", \"ab\", \"ac\", \"bc\", and \"abc\".\n\n\nExample 2:\nInput: \"aba\"\nOutput: 6\nExplanation: The 6 distinct subsequences are \"a\", \"b\", \"ab\", \"ba\", \"aa\" and \"aba\".\n\n\nExample 3:\nInput: \"aaa\"\nOutput: 3\nExplanation: The 3 distinct subsequences are \"a\", \"aa\" and \"aaa\".\n\n\n\n \n \nNote:\n\nS contains only lowercase letters.\n1 <= S.length <= 2000\n    \"\"\"\n",
+        "canonical_solution": "class Solution:\n    def distinctSubseqII(self, s: str) -> int:\n        n = len(s)\n        MOD = 10**9 + 7\n        seen = dict()\n        \n        a = 1\n        for i in range(n):\n            char = s[i]\n            b = 2 * a\n            if char in seen:\n                b -= seen[char]\n            \n            b %= MOD\n            seen[char] = a\n            a = b\n        return a - 1\n                \n",
+        "inputs": [
+            [
+                "\"abc\""
+            ]
+        ],
+        "outputs": [
+            [
+                7
+            ]
+        ],
+        "starter_code": "\nclass Solution:\n    def distinctSubseqII(self, S: str) -> int:\n        ",
+        "scope": [
+            [
+                "Class Body",
+                1,
+                17
+            ],
+            [
+                "Function Body",
+                2,
+                17
+            ],
+            [
+                "For Loop Body",
+                8,
+                16
+            ],
+            [
+                "If Statement Body",
+                11,
+                12
+            ]
+        ],
+        "difficulty": "interview"
+    },
+    {
+        "prompt": "\nclass Solution:\n    def movesToMakeZigzag(self, nums: List[int]) -> int:\n            \"\"\"Given an array nums of integers, a move consists of choosing any element and decreasing it by 1.\nAn array A is a zigzag array if either:\n\nEvery even-indexed element is greater than adjacent elements, ie. A[0] > A[1] < A[2] > A[3] < A[4] > ...\nOR, every odd-indexed element is greater than adjacent elements, ie. A[0] < A[1] > A[2] < A[3] > A[4] < ...\n\nReturn the minimum number of moves to transform the given array nums into a zigzag array.\n \nExample 1:\nInput: nums = [1,2,3]\nOutput: 2\nExplanation: We can decrease 2 to 0 or 3 to 1.\n\nExample 2:\nInput: nums = [9,6,1,6,2]\nOutput: 4\n\n \nConstraints:\n\n1 <= nums.length <= 1000\n1 <= nums[i] <= 1000\n    \"\"\"\n",
+        "canonical_solution": "class Solution:\n    def movesToMakeZigzag(self, nums):\n        n = len(nums)\n        res0 = 0\n        for i in range(0, n, 2):\n            nei = min(nums[j] for j in [i - 1, i + 1] if 0 <= j <= n-1)\n            if nums[i] >= nei:\n                res0 += nums[i] - nei + 1\n        res1 = 0\n        for i in range(1, n, 2):\n            nei = min(nums[j] for j in [i - 1, i + 1] if 0 <= j <= n-1)\n            if nums[i] >= nei:\n                res1 += nums[i] - nei + 1\n        return min(res0, res1)",
+        "inputs": [
+            [
+                [
+                    1,
+                    2,
+                    3
+                ]
+            ]
+        ],
+        "outputs": [
+            [
+                2
+            ]
+        ],
+        "starter_code": "\nclass Solution:\n    def movesToMakeZigzag(self, nums: List[int]) -> int:\n        ",
+        "scope": [
+            [
+                "Class Body",
+                1,
+                14
+            ],
+            [
+                "Function Body",
+                2,
+                14
+            ],
+            [
+                "For Loop Body",
+                5,
+                8
+            ],
+            [
+                "Generator Expression",
+                6,
+                6
+            ],
+            [
+                "If Statement Body",
+                7,
+                8
+            ],
+            [
+                "For Loop Body",
+                10,
+                13
+            ],
+            [
+                "Generator Expression",
+                11,
+                11
+            ],
+            [
+                "If Statement Body",
+                12,
+                13
+            ]
+        ],
+        "difficulty": "interview"
+    },
+    {
+        "prompt": "\nclass Solution:\n    def longestWPI(self, hours: List[int]) -> int:\n            \"\"\"We are given hours, a list of the number of hours worked per day for a given employee.\nA day is considered to be a tiring day if and only if the number of hours worked is (strictly) greater than 8.\nA well-performing interval is an interval of days for which the number of tiring days is strictly larger than the number of non-tiring days.\nReturn the length of the longest well-performing interval.\n \nExample 1:\nInput: hours = [9,9,6,0,6,6,9]\nOutput: 3\nExplanation: The longest well-performing interval is [9,9,6].\n\n \nConstraints:\n\n1 <= hours.length <= 10000\n0 <= hours[i] <= 16\n    \"\"\"\n",
+        "canonical_solution": "class Solution:\n    def longestWPI(self, hours: List[int]) -> int:\n        ans, count, seen = 0, 0, {}\n        for i, hour in enumerate(hours):\n            count = count + 1 if hour > 8 else count - 1\n            if count > 0:\n                ans = i + 1\n            else:\n                if count not in seen:\n                    seen[count] = i\n                if count - 1 in seen:\n                    ans = max(ans, i - seen[count - 1])\n        return ans\n\n        \n",
+        "inputs": [
+            [
+                [
+                    9,
+                    9,
+                    6,
+                    0,
+                    6,
+                    6,
+                    9
+                ]
+            ]
+        ],
+        "outputs": [
+            [
+                3
+            ]
+        ],
+        "starter_code": "\nclass Solution:\n    def longestWPI(self, hours: List[int]) -> int:\n        ",
+        "scope": [
+            [
+                "Class Body",
+                1,
+                13
+            ],
+            [
+                "Function Body",
+                2,
+                13
+            ],
+            [
+                "For Loop Body",
+                4,
+                12
+            ],
+            [
+                "If Statement Body",
+                6,
+                12
+            ],
+            [
+                "If Statement Body",
+                9,
+                10
+            ],
+            [
+                "If Statement Body",
+                11,
+                12
+            ]
+        ],
+        "difficulty": "interview"
+    },
+    {
+        "prompt": "\nclass Solution:\n    def findPoisonedDuration(self, timeSeries: List[int], duration: int) -> int:\n            \"\"\"In LOL world, there is a hero called Teemo and his attacking can make his enemy Ashe be in poisoned condition. Now, given the Teemo's attacking ascending time series towards Ashe and the poisoning time duration per Teemo's attacking, you need to output the total time that Ashe is in poisoned condition.\n\n\nYou may assume that Teemo attacks at the very beginning of a specific time point, and makes Ashe be in poisoned condition immediately.\n\nExample 1:\n\nInput: [1,4], 2\nOutput: 4\nExplanation: At time point 1, Teemo starts attacking Ashe and makes Ashe be poisoned immediately. This poisoned status will last 2 seconds until the end of time point 2. And at time point 4, Teemo attacks Ashe again, and causes Ashe to be in poisoned status for another 2 seconds. So you finally need to output 4.\n\n\n\n\nExample 2:\n\nInput: [1,2], 2\nOutput: 3\nExplanation: At time point 1, Teemo starts attacking Ashe and makes Ashe be poisoned. This poisoned status will last 2 seconds until the end of time point 2. However, at the beginning of time point 2, Teemo attacks Ashe again who is already in poisoned status. Since the poisoned status won't add up together, though the second poisoning attack will still work at time point 2, it will stop at the end of time point 3. So you finally need to output 3.\n\n\n\n\nNote:\n\nYou may assume the length of given time series array won't exceed 10000.\nYou may assume the numbers in the Teemo's attacking time series and his poisoning time duration per attacking are non-negative integers, which won't exceed 10,000,000.\n    \"\"\"\n",
+        "canonical_solution": "class Solution:\n     def findPoisonedDuration(self, timeSeries, duration):\n         \"\"\"\n         :type timeSeries: List[int]\n         :type duration: int\n         :rtype: int\n         \"\"\"\n         if not timeSeries:\n             return 0\n         prev = timeSeries[0]\n         ret = 0\n         count = 0\n         for t in timeSeries[1:]:\n             diff = t - prev\n             if diff > duration:\n                 count += 1\n             else:\n                 ret += diff \n             prev = t;\n         ret += (count+1)*duration \n         return ret\n",
+        "inputs": [
+            [
+                [
+                    1,
+                    4
+                ],
+                2
+            ]
+        ],
+        "outputs": [
+            [
+                4
+            ]
+        ],
+        "starter_code": "\nclass Solution:\n    def findPoisonedDuration(self, timeSeries: List[int], duration: int) -> int:\n        ",
+        "scope": [
+            [
+                "Class Body",
+                1,
+                21
+            ],
+            [
+                "Function Body",
+                2,
+                21
+            ],
+            [
+                "If Statement Body",
+                8,
+                9
+            ],
+            [
+                "For Loop Body",
+                13,
+                19
+            ],
+            [
+                "If Statement Body",
+                15,
+                18
+            ]
+        ],
+        "difficulty": "interview"
+    },
+    {
+        "prompt": "\nclass Solution:\n    def canConstruct(self, s: str, k: int) -> bool:\n            \"\"\"Given a string s and an integer k. You should construct k non-empty palindrome strings using all the characters in s.\nReturn True if you can use all the characters in s to construct k palindrome strings or False otherwise.\n \nExample 1:\nInput: s = \"annabelle\", k = 2\nOutput: true\nExplanation: You can construct two palindromes using all characters in s.\nSome possible constructions \"anna\" + \"elble\", \"anbna\" + \"elle\", \"anellena\" + \"b\"\n\nExample 2:\nInput: s = \"leetcode\", k = 3\nOutput: false\nExplanation: It is impossible to construct 3 palindromes using all the characters of s.\n\nExample 3:\nInput: s = \"true\", k = 4\nOutput: true\nExplanation: The only possible solution is to put each character in a separate string.\n\nExample 4:\nInput: s = \"yzyzyzyzyzyzyzy\", k = 2\nOutput: true\nExplanation: Simply you can put all z's in one string and all y's in the other string. Both strings will be palindrome.\n\nExample 5:\nInput: s = \"cr\", k = 7\nOutput: false\nExplanation: We don't have enough characters in s to construct 7 palindromes.\n\n \nConstraints:\n\n1 <= s.length <= 10^5\nAll characters in s are lower-case English letters.\n1 <= k <= 10^5\n    \"\"\"\n",
+        "canonical_solution": "from collections import Counter\nclass Solution:\n    def canConstruct(self, s: str, k: int) -> bool:\n        if k > len(s): #return False\n            return False\n        counter = Counter(s)\n        odd_counts = 0\n        \n        for char in counter:\n            if counter[char] % 2 == 1:\n                odd_counts += 1\n        \n        return odd_counts <= k",
+        "inputs": [
+            [
+                "\"annabelle\"",
+                2
+            ]
+        ],
+        "outputs": [
+            [
+                true
+            ]
+        ],
+        "starter_code": "\nclass Solution:\n    def canConstruct(self, s: str, k: int) -> bool:\n        ",
+        "scope": [
+            [
+                "Class Body",
+                2,
+                13
+            ],
+            [
+                "Function Body",
+                3,
+                13
+            ],
+            [
+                "If Statement Body",
+                4,
+                5
+            ],
+            [
+                "For Loop Body",
+                9,
+                11
+            ],
+            [
+                "If Statement Body",
+                10,
+                11
+            ]
+        ],
+        "difficulty": "interview"
+    }
+]

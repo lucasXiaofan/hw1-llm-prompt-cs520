@@ -2,6 +2,9 @@
 
 import os
 import json
+import typing
+from dataclasses import dataclass, field
+from typing import Any, Callable, Dict, List, Optional, Set, Tuple
 from openai import OpenAI
 from dotenv import load_dotenv
 
@@ -180,6 +183,7 @@ def string_to_function(code: str, func_name: str):
     import collections
     import re
     import bisect
+    import sys
     from collections import Counter, defaultdict, deque
     from itertools import combinations, permutations, product, groupby
     from functools import reduce, lru_cache
@@ -217,6 +221,7 @@ def string_to_function(code: str, func_name: str):
         "issubclass": issubclass,
         "type": type,
     }
+    safe_builtins["__build_class__"] = __build_class__
 
     # Make common modules and their members available
     safe_globals = {
@@ -241,12 +246,49 @@ def string_to_function(code: str, func_name: str):
         # Common imports from functools
         "reduce": reduce,
         "lru_cache": lru_cache,
+        # Typing helpers
+        "typing": typing,
+        "Any": Any,
+        "Callable": Callable,
+        "Dict": Dict,
+        "List": List,
+        "Optional": Optional,
+        "Set": Set,
+        "Tuple": Tuple,
+        # Dataclasses
+        "dataclass": dataclass,
+        "field": field,
+        # Common modules
+        "sys": sys,
     }
     safe_builtins["__import__"] = __import__
-    local_vars = {}
+    safe_globals["__name__"] = "__main__"
+    local_vars = globals()
     # define function inside this controlled namespace
-    exec(code, safe_globals, local_vars)
-    return local_vars[func_name]
+    exec(code, local_vars)
+    if func_name in local_vars:
+        target = local_vars[func_name]
+        if isinstance(target, type):
+            try:
+                instance = target()
+                if callable(instance):
+                    return instance
+            except Exception:
+                pass
+        return target
+
+    # Handle functions defined as methods on classes (e.g., LeetCode-style)
+    for obj in local_vars.values():
+        if isinstance(obj, type) and hasattr(obj, func_name):
+            try:
+                instance = obj()
+            except Exception as exc:
+                raise ValueError(f"Could not instantiate class '{obj.__name__}' to access '{func_name}': {exc}") from exc
+            method = getattr(instance, func_name)
+            if callable(method):
+                return method
+
+    raise KeyError(f"Function '{func_name}' not found after executing provided code.")
 
 def clean_json_output(output: str):
     """
