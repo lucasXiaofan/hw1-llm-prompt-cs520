@@ -99,7 +99,8 @@ def agent(user_prompt, system_message=None, max_iterations=10, model_name="deeps
         response = client.chat.completions.create(
             model=model_name,
             messages=messages,
-            tools=tools
+            tools=tools,
+            temperature = 0
         )
 
         msg = response.choices[0].message
@@ -136,7 +137,24 @@ def agent(user_prompt, system_message=None, max_iterations=10, model_name="deeps
     print(f"\n{'='*60}")
     print("MAX ITERATIONS REACHED")
     print(f"{'='*60}")
-    return messages, "Max iterations reached"
+
+    messages.append({
+        "role": "user",
+        "content": "Maximum iterations reached. Provide your final answer now without using tools."
+    })
+
+    final_response = client.chat.completions.create(
+        model=model_name,
+        messages=messages,
+        temperature=0
+    )
+
+    final_msg = final_response.choices[0].message
+    messages.append(final_msg)
+
+    print(f"Type: FINAL_TEXT_RESPONSE")
+    print(f"Content: {final_msg.content}")
+    return messages, final_msg.content
 
 def string_to_function(code: str, func_name: str):
     """
@@ -154,6 +172,18 @@ def string_to_function(code: str, func_name: str):
     function
         The callable Python function.
     """
+    # Import common Python built-in modules
+    import math
+    import heapq
+    import itertools
+    import functools
+    import collections
+    import re
+    import bisect
+    from collections import Counter, defaultdict, deque
+    from itertools import combinations, permutations, product, groupby
+    from functools import reduce, lru_cache
+
     # restrict builtins (enough for LeetCode-like problems)
     safe_builtins = {
         "range": range,
@@ -170,8 +200,48 @@ def string_to_function(code: str, func_name: str):
         "filter": filter,
         "any": any,
         "all": all,
+        "list": list,
+        "dict": dict,
+        "set": set,
+        "tuple": tuple,
+        "str": str,
+        "int": int,
+        "float": float,
+        "bool": bool,
+        "ord": ord,
+        "chr": chr,
+        "pow": pow,
+        "round": round,
+        "reversed": reversed,
+        "isinstance": isinstance,
+        "issubclass": issubclass,
+        "type": type,
     }
-    safe_globals = {"__builtins__": safe_builtins}
+
+    # Make common modules and their members available
+    safe_globals = {
+        "__builtins__": safe_builtins,
+        # Modules
+        "math": math,
+        "heapq": heapq,
+        "itertools": itertools,
+        "functools": functools,
+        "collections": collections,
+        "re": re,
+        "bisect": bisect,
+        # Common imports from collections
+        "Counter": Counter,
+        "defaultdict": defaultdict,
+        "deque": deque,
+        # Common imports from itertools
+        "combinations": combinations,
+        "permutations": permutations,
+        "product": product,
+        "groupby": groupby,
+        # Common imports from functools
+        "reduce": reduce,
+        "lru_cache": lru_cache,
+    }
     safe_builtins["__import__"] = __import__
     local_vars = {}
     # define function inside this controlled namespace
@@ -204,24 +274,22 @@ def clean_json_output(output: str):
 if __name__ == "__main__":
     # Test-driven development system message
     test_driven_agent_system_prompt = """You are a test-driven development agent. Follow these steps:
-1. Analyze the problem requirements and extract a SHORT problem name (e.g., "is_prime", "fibonacci", "sort_array")
-2. Create directory: mkdir -p test_driven_agent
-3. Write test file first: test_driven_agent/test_<problem_name>.py with comprehensive test cases
-4. Write solution file: test_driven_agent/<problem_name>.py with the implementation
-5. Run the test to see failures: python test_driven_agent/test_<problem_name>.py
-6. Fix the code iteratively until all tests pass
+1. Analyze the problem requirements and extract a SHORT problem name (e.g., "is_prime", "fibonacci", "sort_array").
+2. Ensure directory `test_driven_agent` exists (e.g., `mkdir -p test_driven_agent`).
+3. Create `test_driven_agent/<problem_name>.py` that contains both the solution implementation and comprehensive automated tests that execute when the file runs.
+4. Run the combined file with `python test_driven_agent/<problem_name>.py` to validate the solution against the tests.
+5. Refine `test_driven_agent/<problem_name>.py`, rerunning `python test_driven_agent/<problem_name>.py` until all tests pass or the maximum iteration limit is reached.
+6. When finished, review the conversation history and output a final JSON report summarizing the effort, referencing key iterations. The JSON must include `problem_name`, `status` ("passed" or "failed"), `iterations_used`, and `summary`.
 
-IMPORTANT file naming rules:
-- All files must be in test_driven_agent/ folder
-- Test file: test_driven_agent/test_<problem_name>.py
-- Solution file: test_driven_agent/<problem_name>.py
-- Use the SAME <problem_name> for both files (e.g., test_is_prime.py and is_prime.py)
+Constraints:
+- All artifacts must stay inside `test_driven_agent/`.
+- Only the single file `test_driven_agent/<problem_name>.py` may be created; it must contain both tests and solution code.
+- Use the same `<problem_name>` everywhere, including filenames, function identifiers, and the final JSON report.
 
-Example for "is_prime" problem:
+Example for "is_prime":
 - mkdir -p test_driven_agent
-- echo "test code" > test_driven_agent/test_is_prime.py
-- echo "solution code" > test_driven_agent/is_prime.py
-- python test_driven_agent/test_is_prime.py"""
+- printf "tests and solution" > test_driven_agent/is_prime.py
+- python test_driven_agent/is_prime.py"""
 
 
 
@@ -289,31 +357,30 @@ content
     h129 = hp9['HumanEval/129']
     test_p = h129['prompt']
     test_t = h129['test']
-    solution = h129['canonical_solution']
+    # solution = h129['canonical_solution']
     
-    string_to_function(test_t,"check")(string_to_function(solution,h129['entry_point']))
-    print(f"passed")
-    # history, answer = agent(
-    #     user_prompt=test_p,
-    #     system_message=normal_coding_agent,
-    #     max_iterations=10
-    # )
+    # string_to_function(test_t,"check")(string_to_function(solution,h129['entry_point']))
+    # print(f"passed")
+    history, answer = agent(
+        user_prompt=test_p,
+        system_message=normal_coding_agent,
+        max_iterations=10
+    )
 
-    # print(f"\n{'='*60}")
-    # print(f"FINAL ANSWER: {answer}")
-    # print(f"Total messages: {len(history)}")
-    # # print(f"history {history}")
-    # print(f"{'='*60}")
+    print(f"\n{'='*60}")
+    print(f"FINAL ANSWER: {answer}")
+    print(f"Total messages: {len(history)}")
+    # print(f"history {history}")
+    print(f"{'='*60}")
     
-    # try:
-    #     answer = clean_json_output(answer)
-    #     print(answer)
-    #     name, code = json.loads(answer)['name'],json.loads(answer)['code']
-    #     print(f"name {name}, code: {code}")
-    #     run_code = string_to_function(code,name)
-    #     test_code = string_to_function(test_t,"check")
-    #     test_code(run_code)
-    # except Exception as e:
-    #     print(f"error {e}")
-
-
+    try:
+        answer = clean_json_output(answer)
+        print(answer)
+        name, code = json.loads(answer)['name'],json.loads(answer)['code']
+        print(f"name {name}, code: {code}")
+        run_code = string_to_function(code,name)
+        test_code = string_to_function(test_t,"check")
+        test_code(run_code)
+        print(f"pass the check")
+    except Exception as e:
+        print(f"error {e}")
