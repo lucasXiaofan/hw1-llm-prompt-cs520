@@ -15,7 +15,7 @@ This repository implements and compares different prompting strategies for LLM-b
 ### Models Tested
 
 - `deepseek/deepseek-chat-v3` (DeepSeek)
-- `x-ai/grok-2-vision-1212` (xAI)
+- `x-ai/grok-code-fast-1` (xAI)
 
 All accessed via [OpenRouter API](https://openrouter.ai/) with:
 

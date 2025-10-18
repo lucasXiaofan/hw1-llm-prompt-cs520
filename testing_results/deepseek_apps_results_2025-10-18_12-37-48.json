@@ -1,0 +1,641 @@
+{
+  "model": "deepseek/deepseek-chat-v3",
+  "strategies": {
+    "cot": {
+      "system_prompt": "You are an expert programmer. For each problem, follow this step-by-step reasoning process:\n\nSTEP 1 - UNDERSTAND: Read the problem carefully\n- What are the inputs and outputs?\n- What do the examples show?\n- What are the constraints?\n\nSTEP 2 - PLAN: Design your solution\n- What algorithm or approach should you use?\n- What data structures do you need?\n- What's the time/space complexity?\n\nSTEP 3 - EDGE CASES: Identify special cases\n- Empty inputs, single elements, duplicates\n- Boundary values (0, negative, maximum)\n- Invalid or unusual inputs\n\nSTEP 4 - IMPLEMENT: Write clean, correct code\n- Handle all edge cases\n- Use clear variable names\n- Ensure logic is sound\n\nEXAMPLE - Problem: Find the sum of all even numbers in a list\n{\n  \"thinking\": \"STEP 1 - UNDERSTAND: Input is a list of integers, output is a single integer (the sum). Need to identify even numbers (divisible by 2) and add them together. Example: [1,2,3,4] → 2+4 = 6. STEP 2 - PLAN: Use a filtering approach - iterate through the list, check each number with modulo operator (n % 2 == 0), sum the filtered results. Can use generator expression with sum() for clean implementation. Time: O(n), Space: O(1). STEP 3 - EDGE CASES: Empty list → return 0 (sum of nothing). No even numbers → return 0. All even numbers → sum all. List with zero → 0 is even, include it. Negative evens → -2, -4 are even, include them. STEP 4 - IMPLEMENT: Use sum() with generator expression for clarity. The condition 'n % 2 == 0' handles all cases including negatives and zero correctly.\",\n  \"name\": \"sum_evens\",\n  \"code\": \"def sum_evens(numbers):\n    return sum(n for n in numbers if n % 2 == 0)\"\n}\n\nAfter your reasoning, output ONLY this JSON format (no markdown fences, no extra text):\n{\n  \"thinking\": \"<your step-by-step reasoning>\",\n  \"name\": \"<function_name>\",\n  \"code\": \"<complete_python_function_code_only>\"\n\n\nCRITICAL: The \"code\" field must contain ONLY the function code, no thinking or comments.",
+      "description": "Chain-of-Thought strategy (one LLM call)."
+    },
+    "self_planning": {
+      "system_prompt": "PLAN: Create a numbered step-by-step solution plan. Focus on algorithm, not code. Output only the plan.\nCODE: Implement the plan in Python. Output JSON: {\"name\": \"function_name\", \"code\": \"def function_name(...):\\n    ...\"}",
+      "description": "Self-Planning strategy (two LLM calls)."
+    }
+  },
+  "tests": {
+    "problem_0": {
+      "prompt": "\ndef b91decode(strng):\n\t    \"\"\"[BasE91](http://base91.sourceforge.net/) is a method for encoding binary as ASCII characters. It is more efficient than Base64 and needs 91 characters to represent the encoded data.\n\nThe following ASCII charakters are used:\n\n    'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'\n    '!#$%&()*+,./:;<=>?@[]^_`{|}~\"'\n    \nCreate two functions that encode strings to basE91 string and decodes the other way round. \n\n    b91encode('test') = 'fPNKd'\n    b91decode('fPNKd') = 'test'\n    \n    b91decode('>OwJh>Io0Tv!8PE') = 'Hello World!'\n    b91encode('Hello World!') = '>OwJh>Io0Tv!8PE'\n    \nInput strings are valid.\n    \"\"\"\n",
+      "strategies": {
+        "cot": {
+          "thinking": "STEP 1 - UNDERSTAND: The problem requires implementing a Base91 decoder. Base91 is a binary-to-text encoding scheme that uses 91 ASCII characters. The input is a Base91 encoded string, and the output is the decoded binary data as a string. Examples show the encoding and decoding process. STEP 2 - PLAN: To decode, we need to reverse the Base91 encoding process. This involves converting each character back to its corresponding value, combining these values into a single integer, and then converting that integer back into bytes. The Base91 characters are mapped to values 0-90. We'll iterate through the input string, calculate the integer value, and then convert it to bytes. STEP 3 - EDGE CASES: Empty string → return empty string. Single character → handle correctly. Strings with all possible Base91 characters → ensure all are decoded properly. STEP 4 - IMPLEMENT: We'll use a dictionary to map characters to their values, accumulate the integer value, and then convert it to bytes using appropriate methods.",
+          "name": "b91decode",
+          "code": "def b91decode(strng):\n    b = 0\n    n = 0\n    out = []\n    for c in strng:\n        if c in b91dict:\n            v = b91dict[c]\n            b |= v * n\n            n = n * 91 + v if n else v\n            while n > 255:\n                out.append(n & 255)\n                n >>= 8\n    if n:\n        out.append(n)\n    return bytes(out).decode('utf-8')\n\nb91dict = {c: i for i, c in enumerate('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!#$%&()*+,./:;<=>?@[]^_`{|}~\"')}",
+          "passed": false,
+          "error": "Some test cases failed",
+          "test_results": [
+            {
+              "test_case": 1,
+              "passed": false,
+              "expected": "['\"Hello World!\"']",
+              "actual": "",
+              "error": "'utf-8' codec can't decode byte 0xc8 in position 0: invalid continuation byte"
+            },
+            {
+              "test_case": 2,
+              "passed": false,
+              "expected": "['\"test\"']",
+              "actual": "",
+              "error": "'utf-8' codec can't decode byte 0xf6 in position 1: invalid start byte"
+            }
+          ],
+          "pass_rate": "0/2"
+        },
+        "self_planning": {
+          "thinking": "### Step-by-Step Solution Plan for `b91decode` Function\n\n1. **Initialize Variables**:\n   - Create a list of characters used in Base91 encoding.\n   - Initialize variables `b` (accumulator) and `n` (bit buffer) to 0.\n   - Initialize an empty list `out` to store the decoded bytes.\n\n2. **Iterate Through the Input String**:\n   - For each character in the input string:\n     - Find the index of the character in the Base91 character list.\n     - Update `b` by multiplying it by 91 and adding the character index.\n     - Update `n` by adding 13 (since Base91 uses 13 bits per character).\n\n3. **Check if Enough Bits are Accumulated**:\n   - If `n` is greater than or equal to 8:\n     - Extract the lower 8 bits from `b` and append them to `out`.\n     - Right-shift `b` by 8 bits.\n     - Subtract 8 from `n`.\n\n4. **Handle Remaining Bits**:\n   - After processing all characters, if `n` is greater than 0:\n     - Append the remaining bits in `b` to `out`.\n\n5. **Convert the List of Bytes to a String**:\n   - Convert the list `out` of bytes to a string using the appropriate encoding (e.g., UTF-8).\n\n6. **Return the Decoded String**:\n   - Return the decoded string as the final result.\n\n### Example Walkthrough\n\nFor the input string `'fPNKd'`:\n- Initialize `b = 0`, `n = 0`, and `out = []`.\n- Process each character:\n  - `'f'` → index 31 → `b = 0 * 91 + 31 = 31`, `n = 0 + 13 = 13`.\n  - `'P'` → index 15 → `b = 31 * 91 + 15 = 2836`, `n = 13 + 13 = 26`.\n  - `'N'` → index 13 → `b = 2836 * 91 + 13 = 258, 269`, `n = 26 + 13 = 39`.\n  - `'K'` → index 10 → `b = 258, 269 * 91 + 10 = 23, 502, 499`, `n = 39 + 13 = 52`.\n  - `'d'` → index 29 → `b = 23, 502, 499 * 91 + 29 = 2, 138, 727, 518`, `n = 52 + 13 = 65`.\n- Extract bytes:\n  - Extract `2, 138, 727, 518 & 0xFF` → 190 → append to `out`.\n  - Right-shift `b` by 8 → `b = 8, 354, 404`.\n  - `n = 65 - 8 = 57`.\n  - Repeat until `n < 8`.\n- Convert `out` to string → `'test'`.\n- Return `'test'`.\n\nThis plan ensures the correct decoding of Base91 encoded strings.",
+          "name": "b91decode",
+          "code": "def b91decode(strng):\n    b = 0\n    n = 0\n    out = []\n    chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!#$%&()*+,./:;<=>?@[]^_`{|}~\"'\n    for c in strng:\n        idx = chars.find(c)\n        if idx == -1:\n            continue\n        b = b * 91 + idx\n        n += 13\n        if n >= 8:\n            out.append(b & 0xFF)\n            b >>= 8\n            n -= 8\n    if n > 0:\n        out.append(b & ((1 << n) - 1))\n    return bytes(out).decode('utf-8')",
+          "passed": false,
+          "error": "Some test cases failed",
+          "test_results": [
+            {
+              "test_case": 1,
+              "passed": false,
+              "expected": "Hello World!",
+              "actual": "N\u000e0\t!N\b(4\u0013/><\u000f\u0004\u0000",
+              "error": "Output mismatch"
+            },
+            {
+              "test_case": 2,
+              "passed": false,
+              "expected": "test",
+              "actual": "\u001f\u000f\r\n\u001d\u0000",
+              "error": "Output mismatch"
+            }
+          ],
+          "pass_rate": "0/2"
+        }
+      }
+    },
+    "problem_1": {
+      "prompt": "\nclass Solution:\n    def maxSizeSlices(self, slices: List[int]) -> int:\n            \"\"\"There is a pizza with 3n slices of varying size, you and your friends will take slices of pizza as follows:\n\nYou will pick any pizza slice.\nYour friend Alice will pick next slice in anti clockwise direction of your pick. \nYour friend Bob will pick next slice in clockwise direction of your pick.\nRepeat until there are no more slices of pizzas.\n\nSizes of Pizza slices is represented by circular array slices in clockwise direction.\nReturn the maximum possible sum of slice sizes which you can have.\n \nExample 1:\n\nInput: slices = [1,2,3,4,5,6]\nOutput: 10\nExplanation: Pick pizza slice of size 4, Alice and Bob will pick slices with size 3 and 5 respectively. Then Pick slices with size 6, finally Alice and Bob will pick slice of size 2 and 1 respectively. Total = 4 + 6.\n\nExample 2:\n\nInput: slices = [8,9,8,6,1,1]\nOutput: 16\nOutput: Pick pizza slice of size 8 in each turn. If you pick slice with size 9 your partners will pick slices of size 8.\n\nExample 3:\nInput: slices = [4,1,2,5,8,3,1,9,7]\nOutput: 21\n\nExample 4:\nInput: slices = [3,1,2]\nOutput: 3\n\n \nConstraints:\n\n1 <= slices.length <= 500\nslices.length % 3 == 0\n1 <= slices[i] <= 1000\n    \"\"\"\n",
+      "strategies": {
+        "cot": {
+          "thinking": "",
+          "name": "",
+          "code": "",
+          "passed": false,
+          "error": "Invalid control character at: line 2 column 421 (char 422)",
+          "test_results": [],
+          "pass_rate": "0/1"
+        },
+        "self_planning": {
+          "thinking": "To solve this problem, we need to maximize the sum of pizza slices you can pick under the given constraints. The key observation is that the problem reduces to selecting a subset of non-adjacent elements in a circular array such that the sum is maximized, and the size of the subset is exactly one-third of the array length (since you can pick n slices out of 3n).\n\n### Approach\n1. **Problem Analysis**: The problem is similar to the House Robber problem but with a circular arrangement and a constraint on the number of elements selected. The circular arrangement means the first and last elements cannot be selected together. The solution involves solving two linear problems: one excluding the first element and another excluding the last element, then taking the maximum of the two results.\n\n2. **Dynamic Programming (DP) Setup**: For each linear problem (either excluding the first or last element), we use dynamic programming to select k elements (where k is n/3) such that no two selected elements are adjacent. The DP state `dp[i][j]` represents the maximum sum achievable by selecting `j` elements from the first `i` elements of the array.\n\n3. **DP Transition**: For each element, we decide whether to include it or not. If we include the i-th element, we cannot include the (i-1)-th element, so the sum becomes `dp[i-2][j-1] + slices[i]`. If we exclude it, the sum remains `dp[i-1][j]`. The DP transition is `dp[i][j] = max(dp[i-1][j], dp[i-2][j-1] + slices[i])`.\n\n4. **Circular Handling**: Since the array is circular, we solve the problem twice: once for the array without the first element and once for the array without the last element. The result is the maximum of these two solutions.\n\n### Solution Plan\n1. **Define the DP Function**: Create a helper function that computes the maximum sum for a linear array where we select exactly k non-adjacent elements.\n2. **Handle Circular Array**: Use the helper function to solve two linear problems:\n   - Exclude the first element and solve for the remaining array.\n   - Exclude the last element and solve for the remaining array.\n3. **Return the Result**: The result is the maximum of the two solutions obtained in the previous step.\n\n### Solution Code\n```python\nclass Solution:\n    def maxSizeSlices(self, slices: List[int]) -> int:\n        def linear_max(slices, k):\n            n = len(slices)\n            dp = [[0] * (k + 1) for _ in range(n + 1)]\n            for i in range(1, n + 1):\n                for j in range(1, k + 1):\n                    if i == 1:\n                        dp[i][j] = slices[0]\n                    else:\n                        dp[i][j] = max(dp[i - 1][j], (dp[i - 2][j - 1] if i >= 2 else 0) + slices[i - 1])\n            return dp[n][k]\n        \n        n = len(slices)\n        k = n // 3\n        return max(linear_max(slices[:-1], k), linear_max(slices[1:], k))\n```\n\n### Explanation\n1. **Helper Function (linear_max)**: This function computes the maximum sum of selecting k non-adjacent elements from a linear array. It uses a DP table where `dp[i][j]` stores the maximum sum for the first `i` elements selecting `j` elements. The transition checks whether including the current element (and thus excluding the previous) yields a better sum than excluding it.\n2. **Circular Handling**: The main function splits the problem into two linear cases: one excluding the first element and another excluding the last element. This avoids the circular dependency where the first and last elements cannot be selected together.\n3. **Result Calculation**: The solution is the maximum value obtained from the two linear problems, ensuring the constraints of the circular array are respected while maximizing the sum of selected slices.\n\nThis approach efficiently handles the circular constraint by leveraging dynamic programming to solve two linear subproblems, providing an optimal solution with a time complexity of O(n^2), which is feasible given the constraints.",
+          "name": "maxSizeSlices",
+          "code": "class Solution:\n    def maxSizeSlices(self, slices: List[int]) -> int:\n        def linear_max(slices, k):\n            n = len(slices)\n            dp = [[0] * (k + 1) for _ in range(n + 1)]\n            for i in range(1, n + 1):\n                for j in range(1, k + 1):\n                    if i == 1:\n                        dp[i][j] = slices[0]\n                    else:\n                        dp[i][j] = max(dp[i - 1][j], (dp[i - 2][j - 1] if i >= 2 else 0) + slices[i - 1])\n            return dp[n][k]\n        \n        n = len(slices)\n        k = n // 3\n        return max(linear_max(slices[:-1], k), linear_max(slices[1:], k))",
+          "passed": true,
+          "error": "",
+          "test_results": [
+            {
+              "test_case": 1,
+              "passed": true,
+              "expected": "10",
+              "actual": "10",
+              "error": ""
+            }
+          ],
+          "pass_rate": "1/1"
+        }
+      }
+    },
+    "problem_2": {
+      "prompt": "\nclass Solution:\n    def numTimesAllBlue(self, light: List[int]) -> int:\n            \"\"\"There is a room with n bulbs, numbered from 1 to n, arranged in a row from left to right. Initially, all the bulbs are turned off.\nAt moment k (for k from 0 to n - 1), we turn on the light[k] bulb. A bulb change color to blue only if it is on and all the previous bulbs (to the left) are turned on too.\nReturn the number of moments in which all turned on bulbs are blue.\n \nExample 1:\n\nInput: light = [2,1,3,5,4]\nOutput: 3\nExplanation: All bulbs turned on, are blue at the moment 1, 2 and 4.\n\nExample 2:\nInput: light = [3,2,4,1,5]\nOutput: 2\nExplanation: All bulbs turned on, are blue at the moment 3, and 4 (index-0).\n\nExample 3:\nInput: light = [4,1,2,3]\nOutput: 1\nExplanation: All bulbs turned on, are blue at the moment 3 (index-0).\nBulb 4th changes to blue at the moment 3.\n\nExample 4:\nInput: light = [2,1,4,3,6,5]\nOutput: 3\n\nExample 5:\nInput: light = [1,2,3,4,5,6]\nOutput: 6\n\n \nConstraints:\n\nn == light.length\n1 <= n <= 5 * 10^4\nlight is a permutation of  [1, 2, ..., n]\n    \"\"\"\n",
+      "strategies": {
+        "cot": {
+          "thinking": "STEP 1 - UNDERSTAND: The input is a list of integers representing the order in which bulbs are turned on. The output is the number of moments when all turned on bulbs are blue. A bulb turns blue if it is on and all previous bulbs are also on. Examples show that we need to track the rightmost bulb turned on and compare it to the number of bulbs turned on so far. STEP 2 - PLAN: We can iterate through the list, keeping track of the maximum bulb number turned on so far. At each step, if the maximum equals the number of bulbs turned on, it means all bulbs up to that point are on and blue. Increment the count in such cases. Time complexity: O(n), Space complexity: O(1). STEP 3 - EDGE CASES: Single bulb → always blue. All bulbs turned on in order → all moments count. Bulbs turned on in reverse order → only the last moment counts. STEP 4 - IMPLEMENT: Use a loop to iterate through the list, updating the maximum bulb number and counting the moments when all bulbs up to that point are on.",
+          "name": "numTimesAllBlue",
+          "code": "def numTimesAllBlue(self, light: List[int]) -> int:\n    max_num = 0\n    count = 0\n    for i, num in enumerate(light):\n        max_num = max(max_num, num)\n        if max_num == i + 1:\n            count += 1\n    return count",
+          "passed": false,
+          "error": "Some test cases failed",
+          "test_results": [
+            {
+              "test_case": 1,
+              "passed": false,
+              "expected": "[3]",
+              "actual": "",
+              "error": "numTimesAllBlue() missing 1 required positional argument: 'light'"
+            }
+          ],
+          "pass_rate": "0/1"
+        },
+        "self_planning": {
+          "thinking": "1. **Initialize Variables**: \n   - Create a variable `max_on` to keep track of the highest bulb turned on so far.\n   - Create a variable `count` to count the number of moments when all turned on bulbs are blue.\n\n2. **Iterate Through the Light List**:\n   - Loop through the `light` list using an index `k` (from 0 to n-1).\n\n3. **Update Maximum Bulb Turned On**:\n   - For each bulb `light[k]`, update `max_on` to be the maximum of `max_on` and `light[k]`.\n\n4. **Check if All Bulbs Up to `max_on` Are Turned On**:\n   - If `max_on` equals `k + 1` (since `k` is 0-based), it means all bulbs from 1 to `max_on` are turned on.\n   - Increment the `count` by 1 in this case.\n\n5. **Return the Count**:\n   - After the loop ends, return the `count` as the result.",
+          "name": "numTimesAllBlue",
+          "code": "def numTimesAllBlue(self, light):\n    max_on = 0\n    count = 0\n    for k in range(len(light)):\n        max_on = max(max_on, light[k])\n        if max_on == k + 1:\n            count += 1\n    return count",
+          "passed": false,
+          "error": "Some test cases failed",
+          "test_results": [
+            {
+              "test_case": 1,
+              "passed": false,
+              "expected": "[3]",
+              "actual": "",
+              "error": "numTimesAllBlue() missing 1 required positional argument: 'light'"
+            }
+          ],
+          "pass_rate": "0/1"
+        }
+      }
+    },
+    "problem_3": {
+      "prompt": "\nclass Solution:\n    def unhappyFriends(self, n: int, preferences: List[List[int]], pairs: List[List[int]]) -> int:\n            \"\"\"You are given a list of preferences for n friends, where n is always even.\nFor each person i, preferences[i] contains a list of friends sorted in the order of preference. In other words, a friend earlier in the list is more preferred than a friend later in the list. Friends in each list are denoted by integers from 0 to n-1.\nAll the friends are divided into pairs. The pairings are given in a list pairs, where pairs[i] = [xi, yi] denotes xi is paired with yi and yi is paired with xi.\nHowever, this pairing may cause some of the friends to be unhappy. A friend x is unhappy if x is paired with y and there exists a friend u who is paired with v but:\n\nx prefers u over y, and\nu prefers x over v.\n\nReturn the number of unhappy friends.\n \nExample 1:\nInput: n = 4, preferences = [[1, 2, 3], [3, 2, 0], [3, 1, 0], [1, 2, 0]], pairs = [[0, 1], [2, 3]]\nOutput: 2\nExplanation:\nFriend 1 is unhappy because:\n- 1 is paired with 0 but prefers 3 over 0, and\n- 3 prefers 1 over 2.\nFriend 3 is unhappy because:\n- 3 is paired with 2 but prefers 1 over 2, and\n- 1 prefers 3 over 0.\nFriends 0 and 2 are happy.\n\nExample 2:\nInput: n = 2, preferences = [[1], [0]], pairs = [[1, 0]]\nOutput: 0\nExplanation: Both friends 0 and 1 are happy.\n\nExample 3:\nInput: n = 4, preferences = [[1, 3, 2], [2, 3, 0], [1, 3, 0], [0, 2, 1]], pairs = [[1, 3], [0, 2]]\nOutput: 4\n\n \nConstraints:\n\n2 <= n <= 500\nn is even.\npreferences.length == n\npreferences[i].length == n - 1\n0 <= preferences[i][j] <= n - 1\npreferences[i] does not contain i.\nAll values in preferences[i] are unique.\npairs.length == n/2\npairs[i].length == 2\nxi != yi\n0 <= xi, yi <= n - 1\nEach person is contained in exactly one pair.\n    \"\"\"\n",
+      "strategies": {
+        "cot": {
+          "thinking": "",
+          "name": "",
+          "code": "",
+          "passed": false,
+          "error": "Invalid control character at: line 2 column 573 (char 574)",
+          "test_results": [],
+          "pass_rate": "0/1"
+        },
+        "self_planning": {
+          "thinking": "1. **Initialize a dictionary to store the pairing of each friend**: Create a dictionary where the key is the friend and the value is their paired friend.\n\n2. **Create a preference rank dictionary**: For each friend, create a dictionary that maps their friends to their preference rank (lower rank means higher preference).\n\n3. **Iterate through each pair**: For each pair of friends, check if either friend is unhappy.\n\n4. **Check for unhappiness**:\n   - For a friend `x` paired with `y`, iterate through all friends `u` that `x` prefers over `y`.\n   - For each such `u`, check if `u` prefers `x` over their current pair `v`.\n   - If both conditions are met, mark `x` as unhappy.\n\n5. **Count the number of unhappy friends**: Keep a count of all friends marked as unhappy.\n\n6. **Return the count of unhappy friends**: After checking all pairs, return the total count of unhappy friends.",
+          "name": "unhappyFriends",
+          "code": "from typing import List\n\ndef unhappyFriends(n: int, preferences: List[List[int]], pairs: List[List[int]]) -> int:\n    # Step 1: Initialize a dictionary to store the pairing of each friend\n    pair_dict = {}\n    for x, y in pairs:\n        pair_dict[x] = y\n        pair_dict[y] = x\n    \n    # Step 2: Create a preference rank dictionary\n    pref_rank = {}\n    for i in range(n):\n        pref_rank[i] = {}\n        for idx, friend in enumerate(preferences[i]):\n            pref_rank[i][friend] = idx\n    \n    # Step 3: Iterate through each pair and check for unhappiness\n    unhappy = set()\n    for x, y in pairs:\n        # Check if x is unhappy\n        for u in preferences[x]:\n            if u == y:\n                break\n            v = pair_dict[u]\n            if pref_rank[u][x] < pref_rank[u][v]:\n                unhappy.add(x)\n                break\n        # Check if y is unhappy\n        for u in preferences[y]:\n            if u == x:\n                break\n            v = pair_dict[u]\n            if pref_rank[u][y] < pref_rank[u][v]:\n                unhappy.add(y)\n                break\n    \n    # Step 4: Return the count of unhappy friends\n    return len(unhappy)",
+          "passed": false,
+          "error": "Some test cases failed",
+          "test_results": [
+            {
+              "test_case": 1,
+              "passed": false,
+              "expected": "[2]",
+              "actual": "",
+              "error": "not enough values to unpack (expected 2, got 0)"
+            }
+          ],
+          "pass_rate": "0/1"
+        }
+      }
+    },
+    "problem_4": {
+      "prompt": "\nclass Solution:\n    def minSwaps(self, grid: List[List[int]]) -> int:\n            \"\"\"Given an n x n binary grid, in one step you can choose two adjacent rows of the grid and swap them.\nA grid is said to be valid if all the cells above the main diagonal are zeros.\nReturn the minimum number of steps needed to make the grid valid, or -1 if the grid cannot be valid.\nThe main diagonal of a grid is the diagonal that starts at cell (1, 1) and ends at cell (n, n).\n \nExample 1:\n\nInput: grid = [[0,0,1],[1,1,0],[1,0,0]]\nOutput: 3\n\nExample 2:\n\nInput: grid = [[0,1,1,0],[0,1,1,0],[0,1,1,0],[0,1,1,0]]\nOutput: -1\nExplanation: All rows are similar, swaps have no effect on the grid.\n\nExample 3:\n\nInput: grid = [[1,0,0],[1,1,0],[1,1,1]]\nOutput: 0\n\n \nConstraints:\n\nn == grid.length\nn == grid[i].length\n1 <= n <= 200\ngrid[i][j] is 0 or 1\n    \"\"\"\n",
+      "strategies": {
+        "cot": {
+          "thinking": "STEP 1 - UNDERSTAND: The input is an n x n binary grid. The goal is to make the grid valid by ensuring all cells above the main diagonal are zeros. This can be achieved by swapping adjacent rows. The output is the minimum number of swaps required or -1 if it's impossible. Examples show that the number of swaps depends on the trailing zeros in each row. STEP 2 - PLAN: For each row, count the number of trailing zeros. Then, sort the rows based on the required number of trailing zeros (row i should have at least n-i-1 trailing zeros). Use a greedy approach to swap rows to their correct positions, counting the number of swaps. If any row cannot be placed correctly, return -1. Time complexity: O(n^2) for counting trailing zeros and O(n^2) for sorting/swapping. Space complexity: O(n) for storing trailing zeros. STEP 3 - EDGE CASES: Grids with all zeros or all ones. Grids where no swaps are needed. Grids where it's impossible to make valid. Grids with maximum size (n=200). STEP 4 - IMPLEMENT: Implement the function to count trailing zeros, sort rows based on requirements, and count swaps.",
+          "name": "minSwaps",
+          "code": "class Solution:\n    def minSwaps(self, grid: List[List[int]]) -> int:\n        n = len(grid)\n        zeros = [0] * n\n        for i in range(n):\n            count = 0\n            for j in range(n-1, -1, -1):\n                if grid[i][j] == 0:\n                    count += 1\n                else:\n                    break\n            zeros[i] = count\n        swaps = 0\n        for i in range(n):\n            required = n - i - 1\n            j = i\n            while j < n and zeros[j] < required:\n                j += 1\n            if j == n:\n                return -1\n            while j > i:\n                zeros[j], zeros[j-1] = zeros[j-1], zeros[j]\n                swaps += 1\n                j -= 1\n        return swaps",
+          "passed": false,
+          "error": "Some test cases failed",
+          "test_results": [
+            {
+              "test_case": 1,
+              "passed": false,
+              "expected": "[3]",
+              "actual": "",
+              "error": "list index out of range"
+            }
+          ],
+          "pass_rate": "0/1"
+        },
+        "self_planning": {
+          "thinking": "To solve this problem, we need to determine the minimum number of row swaps required to make the grid valid, where a valid grid has all cells above the main diagonal as zeros. Here’s a step-by-step plan:\n\n1. **Identify the Required Trailing Zeros for Each Row**:\n   - For each row in the grid, calculate the number of trailing zeros (i.e., the number of zeros at the end of the row).\n   - The required number of trailing zeros for the i-th row (starting from 0) should be at least `n - i - 1`, where `n` is the size of the grid.\n\n2. **Check Feasibility**:\n   - If any row does not have enough trailing zeros to satisfy the requirement for its position, it is impossible to make the grid valid. Return `-1`.\n\n3. **Sort Rows Based on Trailing Zeros**:\n   - Sort the rows in descending order based on the number of trailing zeros. This will help in determining the minimum number of swaps needed.\n\n4. **Calculate the Minimum Number of Swaps**:\n   - Iterate through the sorted list of rows and compare it with the original grid.\n   - For each row, if it is not in the correct position, find the nearest row that satisfies the trailing zeros requirement and swap it into the correct position.\n   - Count the number of swaps performed.\n\n5. **Return the Result**:\n   - After all swaps are performed, return the total number of swaps as the result.\n\nThis plan ensures that we efficiently determine the minimum number of swaps required to make the grid valid or identify if it’s impossible.",
+          "name": "minSwaps",
+          "code": "from typing import List\n\ndef minSwaps(grid: List[List[int]]) -> int:\n    n = len(grid)\n    # Calculate the number of trailing zeros for each row\n    trailing_zeros = []\n    for row in grid:\n        count = 0\n        for i in range(n - 1, -1, -1):\n            if row[i] == 0:\n                count += 1\n            else:\n                break\n        trailing_zeros.append(count)\n    \n    # Check if it's possible to make the grid valid\n    for i in range(n):\n        if trailing_zeros[i] < n - i - 1:\n            return -1\n    \n    # Sort the rows based on trailing zeros in descending order\n    sorted_trailing_zeros = sorted(trailing_zeros, reverse=True)\n    \n    # Calculate the minimum number of swaps\n    swaps = 0\n    for i in range(n):\n        if trailing_zeros[i] < sorted_trailing_zeros[i]:\n            # Find the nearest row with enough trailing zeros\n            for j in range(i + 1, n):\n                if trailing_zeros[j] >= sorted_trailing_zeros[i]:\n                    # Swap rows i and j\n                    trailing_zeros[i], trailing_zeros[j] = trailing_zeros[j], trailing_zeros[i]\n                    swaps += j - i\n                    break\n    \n    return swaps",
+          "passed": false,
+          "error": "Some test cases failed",
+          "test_results": [
+            {
+              "test_case": 1,
+              "passed": false,
+              "expected": "[3]",
+              "actual": "",
+              "error": "list index out of range"
+            }
+          ],
+          "pass_rate": "0/1"
+        }
+      }
+    },
+    "problem_5": {
+      "prompt": "\ndef mix(s1, s2):\n\t    \"\"\"Given two strings s1 and s2, we want to visualize how different the two strings are.\nWe will only take into account the *lowercase* letters (a to z).\nFirst let us count the frequency of each *lowercase* letters in s1 and s2.\n\n`s1 = \"A aaaa bb c\"`\n\n`s2 = \"& aaa bbb c d\"`\n\n`s1 has 4 'a', 2 'b', 1 'c'`\n\n`s2 has 3 'a', 3 'b', 1 'c', 1 'd'`\n\nSo the maximum for 'a' in s1 and s2 is 4 from s1; the maximum for 'b' is 3 from s2.\nIn the following we will not consider letters when the maximum of their occurrences\nis less than or equal to 1.\n\nWe can resume the differences between s1 and s2 in the following string:\n`\"1:aaaa/2:bbb\"`\nwhere `1` in `1:aaaa` stands for string s1 and `aaaa` because the maximum for `a` is 4.\nIn the same manner `2:bbb` stands for string s2 and `bbb` because the maximum for `b` is 3.\n\nThe task is to produce a string in which each *lowercase* letters of s1 or s2 appears as many times as\nits maximum if this maximum is *strictly greater than 1*; these letters will be prefixed by the \nnumber of the string where they appear with their maximum value and `:`. \nIf the maximum is in s1 as well as in s2 the prefix is `=:`.\n\nIn the result, substrings (a substring is for example 2:nnnnn or 1:hhh; it contains the prefix) will be in decreasing order of their length and when they have the same length sorted in ascending lexicographic order (letters and digits - more precisely sorted by codepoint); the different groups will be separated by '/'. See examples and \"Example Tests\".\n\nHopefully other examples can make this clearer.\n\n```\ns1 = \"my&friend&Paul has heavy hats! &\"\ns2 = \"my friend John has many many friends &\"\nmix(s1, s2) --> \"2:nnnnn/1:aaaa/1:hhh/2:mmm/2:yyy/2:dd/2:ff/2:ii/2:rr/=:ee/=:ss\"\n\ns1 = \"mmmmm m nnnnn y&friend&Paul has heavy hats! &\"\ns2 = \"my frie n d Joh n has ma n y ma n y frie n ds n&\"\nmix(s1, s2) --> \"1:mmmmmm/=:nnnnnn/1:aaaa/1:hhh/2:yyy/2:dd/2:ff/2:ii/2:rr/=:ee/=:ss\"\n\ns1=\"Are the kids at home? aaaaa fffff\"\ns2=\"Yes they are here! aaaaa fffff\"\nmix(s1, s2) --> \"=:aaaaaa/2:eeeee/=:fffff/1:tt/2:rr/=:hh\"\n```\n# Note for Swift, R, PowerShell\nThe prefix `=:` is replaced by `E:`\n``` \ns1 = \"mmmmm m nnnnn y&friend&Paul has heavy hats! &\"\ns2 = \"my frie n d Joh n has ma n y ma n y frie n ds n&\"\nmix(s1, s2) --> \"1:mmmmmm/E:nnnnnn/1:aaaa/1:hhh/2:yyy/2:dd/2:ff/2:ii/2:rr/E:ee/E:ss\"\n```\n    \"\"\"\n",
+      "strategies": {
+        "self_planning": {
+          "thinking": "1. **Filter and Count Letters**: Extract lowercase letters from both `s1` and `s2`. Count the frequency of each letter in both strings.\n\n2. **Determine Maximum Frequencies**: For each lowercase letter, determine the maximum frequency between `s1` and `s2`. Ignore letters where the maximum frequency is less than or equal to 1.\n\n3. **Identify Source of Maximum Frequency**: For each letter, identify whether the maximum frequency comes from `s1`, `s2`, or both (i.e., the frequencies are equal).\n\n4. **Construct Substrings**: For each letter, construct a substring in the format `prefix:letters`, where:\n   - `prefix` is `1:` if the maximum frequency is from `s1`, `2:` if from `s2`, or `=:` if from both.\n   - `letters` is the letter repeated by its maximum frequency.\n\n5. **Sort Substrings**: Sort the substrings first by length in descending order. If lengths are equal, sort lexicographically in ascending order.\n\n6. **Join Substrings**: Combine the sorted substrings into a single string, separated by `/`.\n\n7. **Return Result**: Return the final constructed string.",
+          "name": "mix",
+          "code": "def mix(s1, s2):\n    from collections import defaultdict\n\n    # Count the frequency of each lowercase letter in s1 and s2\n    count1 = defaultdict(int)\n    count2 = defaultdict(int)\n\n    for char in s1:\n        if char.islower():\n            count1[char] += 1\n\n    for char in s2:\n        if char.islower():\n            count2[char] += 1\n\n    # Determine the maximum frequency for each letter\n    max_counts = {}\n    for char in set(count1.keys()).union(set(count2.keys())):\n        max_count = max(count1.get(char, 0), count2.get(char, 0))\n        if max_count > 1:\n            max_counts[char] = max_count\n\n    # Identify the source of the maximum frequency\n    result = []\n    for char, max_count in max_counts.items():\n        if count1.get(char, 0) > count2.get(char, 0):\n            prefix = '1:'\n        elif count2.get(char, 0) > count1.get(char, 0):\n            prefix = '2:'\n        else:\n            prefix = '=:'\n        result.append(f\"{prefix}{char * max_count}\")\n\n    # Sort the result first by length in descending order, then lexicographically\n    result.sort(key=lambda x: (-len(x), x))\n\n    # Join the result with '/' and return\n    return '/'.join(result)",
+          "passed": true,
+          "error": "",
+          "test_results": [
+            {
+              "test_case": 1,
+              "passed": true,
+              "expected": "1:ooo/1:uuu/2:sss/=:nnn/1:ii/2:aa/2:dd/2:ee/=:gg",
+              "actual": "1:ooo/1:uuu/2:sss/=:nnn/1:ii/2:aa/2:dd/2:ee/=:gg",
+              "error": ""
+            },
+            {
+              "test_case": 2,
+              "passed": true,
+              "expected": "2:eeeee/2:yy/=:hh/=:rr",
+              "actual": "2:eeeee/2:yy/=:hh/=:rr",
+              "error": ""
+            },
+            {
+              "test_case": 3,
+              "passed": true,
+              "expected": "1:ee/1:ll/1:oo",
+              "actual": "1:ee/1:ll/1:oo",
+              "error": ""
+            }
+          ],
+          "pass_rate": "3/3"
+        },
+        "cot": {
+          "thinking": "STEP 1 - UNDERSTAND: The function takes two strings s1 and s2. We need to compare the frequency of each lowercase letter in both strings. For each letter, we find the maximum frequency between s1 and s2. If the maximum frequency is greater than 1, we include it in the result with a prefix indicating which string has the maximum frequency (1:, 2:, or =: if both have the same frequency). The result should be a string with substrings separated by '/', sorted first by length in descending order, then lexicographically. STEP 2 - PLAN: First, count the frequency of each lowercase letter in s1 and s2. Then, for each letter, determine the maximum frequency and which string it comes from. Filter out letters with a maximum frequency of 1 or less. Construct the result substrings with the appropriate prefix. Finally, sort the substrings by length (descending) and lexicographically, and join them with '/'. STEP 3 - EDGE CASES: Empty strings → return empty string. No letters with frequency > 1 → return empty string. All letters have the same frequency in both strings → use =: prefix. Letters with frequency > 1 in both strings but same frequency → use =: prefix. STEP 4 - IMPLEMENT: Use collections.Counter to count frequencies. Iterate through lowercase letters, determine the maximum frequency and prefix, filter out letters with frequency <= 1, construct substrings, sort them, and join with '/'.",
+          "name": "mix",
+          "code": "from collections import Counter\ndef mix(s1, s2):\n    count1 = Counter(c for c in s1 if c.islower())\n    count2 = Counter(c for c in s2 if c.islower())\n    result = []\n    for c in set(count1.keys()).union(set(count2.keys())):\n        max_count = max(count1.get(c, 0), count2.get(c, 0))\n        if max_count > 1:\n            if count1.get(c, 0) > count2.get(c, 0):\n                result.append(f'1:{c * max_count}')\n            elif count2.get(c, 0) > count1.get(c, 0):\n                result.append(f'2:{c * max_count}')\n            else:\n                result.append(f'=:{c * max_count}')\n    result.sort(key=lambda x: (-len(x), x))\n    return '/'.join(result)",
+          "passed": true,
+          "error": "",
+          "test_results": [
+            {
+              "test_case": 1,
+              "passed": true,
+              "expected": "1:ooo/1:uuu/2:sss/=:nnn/1:ii/2:aa/2:dd/2:ee/=:gg",
+              "actual": "1:ooo/1:uuu/2:sss/=:nnn/1:ii/2:aa/2:dd/2:ee/=:gg",
+              "error": ""
+            },
+            {
+              "test_case": 2,
+              "passed": true,
+              "expected": "2:eeeee/2:yy/=:hh/=:rr",
+              "actual": "2:eeeee/2:yy/=:hh/=:rr",
+              "error": ""
+            },
+            {
+              "test_case": 3,
+              "passed": true,
+              "expected": "1:ee/1:ll/1:oo",
+              "actual": "1:ee/1:ll/1:oo",
+              "error": ""
+            }
+          ],
+          "pass_rate": "3/3"
+        }
+      }
+    },
+    "problem_6": {
+      "prompt": "\nclass Solution:\n    def containsCycle(self, grid: List[List[str]]) -> bool:\n            \"\"\"Given a 2D array of characters grid of size m x n, you need to find if there exists any cycle consisting of the same value in grid.\nA cycle is a path of length 4 or more in the grid that starts and ends at the same cell. From a given cell, you can move to one of the cells adjacent to it - in one of the four directions (up, down, left, or right), if it has the same value of the current cell.\nAlso, you cannot move to the cell that you visited in your last move. For example, the cycle (1, 1) -> (1, 2) -> (1, 1) is invalid because from (1, 2) we visited (1, 1) which was the last visited cell.\nReturn true if any cycle of the same value exists in grid, otherwise, return false.\n \nExample 1:\n\nInput: grid = [[\"a\",\"a\",\"a\",\"a\"],[\"a\",\"b\",\"b\",\"a\"],[\"a\",\"b\",\"b\",\"a\"],[\"a\",\"a\",\"a\",\"a\"]]\nOutput: true\nExplanation: There are two valid cycles shown in different colors in the image below:\n\n\nExample 2:\n\nInput: grid = [[\"c\",\"c\",\"c\",\"a\"],[\"c\",\"d\",\"c\",\"c\"],[\"c\",\"c\",\"e\",\"c\"],[\"f\",\"c\",\"c\",\"c\"]]\nOutput: true\nExplanation: There is only one valid cycle highlighted in the image below:\n\n\nExample 3:\n\nInput: grid = [[\"a\",\"b\",\"b\"],[\"b\",\"z\",\"b\"],[\"b\",\"b\",\"a\"]]\nOutput: false\n\n \nConstraints:\n\nm == grid.length\nn == grid[i].length\n1 <= m <= 500\n1 <= n <= 500\ngrid consists only of lowercase English letters.\n    \"\"\"\n",
+      "strategies": {
+        "cot": {
+          "thinking": "STEP 1 - UNDERSTAND: The input is a 2D grid of lowercase English letters. The output is a boolean indicating whether there is a cycle of length 4 or more where all cells in the cycle have the same value. A cycle must start and end at the same cell, and you cannot move back to the immediately previous cell. STEP 2 - PLAN: Use Depth-First Search (DFS) to explore the grid. For each cell, if it hasn't been visited, start a DFS from that cell. During DFS, keep track of the path to detect cycles. If a cycle of length 4 or more is found, return True. Use a visited set to avoid reprocessing cells. STEP 3 - EDGE CASES: Grid with all cells having the same value → likely to have cycles. Grid with no cycles → return False. Grid with a single cell → return False. Grid with a cycle of length exactly 4 → return True. STEP 4 - IMPLEMENT: Implement DFS with backtracking to explore all possible paths and detect cycles.",
+          "name": "containsCycle",
+          "code": "class Solution:\n    def containsCycle(self, grid: List[List[str]]) -> bool:\n        m, n = len(grid), len(grid[0])\n        visited = [[False] * n for _ in range(m)]\n        \n        def dfs(i, j, pi, pj):\n            if visited[i][j]:\n                return True\n            visited[i][j] = True\n            for di, dj in [(0, 1), (1, 0), (0, -1), (-1, 0)]:\n                ni, nj = i + di, j + dj\n                if 0 <= ni < m and 0 <= nj < n and grid[ni][nj] == grid[i][j] and (ni != pi or nj != pj):\n                    if dfs(ni, nj, i, j):\n                        return True\n            return False\n        \n        for i in range(m):\n            for j in range(n):\n                if not visited[i][j]:\n                    if dfs(i, j, -1, -1):\n                        return True\n        return False",
+          "passed": false,
+          "error": "Some test cases failed",
+          "test_results": [
+            {
+              "test_case": 1,
+              "passed": false,
+              "expected": "[True]",
+              "actual": "",
+              "error": "list index out of range"
+            }
+          ],
+          "pass_rate": "0/1"
+        },
+        "self_planning": {
+          "thinking": "1. **Initialize Visited Matrix**: Create a 2D matrix `visited` of the same size as `grid` to keep track of visited cells during the traversal.\n\n2. **Iterate Through Grid**: Loop through each cell in the grid using nested loops (one for rows, one for columns).\n\n3. **Check for Unvisited Cells**: For each cell, if it has not been visited, start a Depth-First Search (DFS) from that cell.\n\n4. **DFS Traversal**:\n   - **Mark Current Cell**: Mark the current cell as visited.\n   - **Check Neighbors**: For each neighboring cell (up, down, left, right), check if it has the same value as the current cell.\n   - **Avoid Backtracking**: Ensure that the neighbor is not the cell from which the current cell was reached (to avoid backtracking).\n   - **Cycle Detection**: If a neighbor is already visited and it is not the parent cell, a cycle is detected. Return `True`.\n   - **Recursive DFS**: If the neighbor is unvisited, recursively perform DFS from that neighbor.\n\n5. **Return False if No Cycle Found**: If the DFS completes without detecting a cycle, continue to the next unvisited cell. If all cells are processed and no cycle is found, return `False`.\n\n6. **Edge Cases**: Handle edge cases such as grids with fewer than 4 cells, as cycles require at least 4 cells.\n\n7. **Optimization**: Use memoization or pruning techniques to optimize the DFS traversal, especially for large grids.\n\n8. **Final Output**: After processing all cells, return `False` if no cycle is detected.",
+          "name": "containsCycle",
+          "code": "from typing import List\n\ndef containsCycle(grid: List[List[str]]) -> bool:\n    \"\"\"\n    Determines if the given grid contains a cycle of the same value.\n    A cycle is a path of length 4 or more that starts and ends at the same cell.\n    \"\"\"\n    if not grid:\n        return False\n    \n    rows, cols = len(grid), len(grid[0])\n    visited = [[False for _ in range(cols)] for _ in range(rows)]\n    \n    def dfs(r, c, pr, pc, char):\n        \"\"\"\n        Perform DFS to detect cycles starting from (r, c).\n        pr and pc are the parent coordinates to avoid backtracking.\n        \"\"\"\n        if visited[r][c]:\n            return True\n        \n        visited[r][c] = True\n        directions = [(0, 1), (1, 0), (0, -1), (-1, 0)]\n        \n        for dr, dc in directions:\n            nr, nc = r + dr, c + dc\n            if 0 <= nr < rows and 0 <= nc < cols and grid[nr][nc] == char and (nr, nc) != (pr, pc):\n                if dfs(nr, nc, r, c, char):\n                    return True\n        \n        return False\n    \n    for r in range(rows):\n        for c in range(cols):\n            if not visited[r][c]:\n                if dfs(r, c, -1, -1, grid[r][c]):\n                    return True\n    \n    return False",
+          "passed": false,
+          "error": "Some test cases failed",
+          "test_results": [
+            {
+              "test_case": 1,
+              "passed": false,
+              "expected": "[True]",
+              "actual": "",
+              "error": "list index out of range"
+            }
+          ],
+          "pass_rate": "0/1"
+        }
+      }
+    },
+    "problem_7": {
+      "prompt": "\nclass Solution:\n    def numPermsDISequence(self, S: str) -> int:\n            \"\"\"We are given S, a length n string of characters from the set {'D', 'I'}. (These letters stand for \"decreasing\" and \"increasing\".)\nA valid permutation is a permutation P[0], P[1], ..., P[n] of integers {0, 1, ..., n}, such that for all i:\n\nIf S[i] == 'D', then P[i] > P[i+1], and;\nIf S[i] == 'I', then P[i] < P[i+1].\n\nHow many valid permutations are there?  Since the answer may be large, return your answer modulo 10^9 + 7.\n \nExample 1:\nInput: \"DID\"\nOutput: 5\nExplanation: \nThe 5 valid permutations of (0, 1, 2, 3) are:\n(1, 0, 3, 2)\n(2, 0, 3, 1)\n(2, 1, 3, 0)\n(3, 0, 2, 1)\n(3, 1, 2, 0)\n\n \nNote:\n\n1 <= S.length <= 200\nS consists only of characters from the set {'D', 'I'}.\n    \"\"\"\n",
+      "strategies": {
+        "self_planning": {
+          "thinking": "### Step-by-Step Solution Plan:\n\n1. **Understand the Problem**:\n   - We are given a string `S` consisting of characters 'D' (decreasing) and 'I' (increasing).\n   - We need to find the number of valid permutations of integers `{0, 1, ..., n}` such that for each character in `S`, the corresponding condition (either decreasing or increasing) is satisfied.\n   - The result should be modulo \\(10^9 + 7\\).\n\n2. **Dynamic Programming Approach**:\n   - Use dynamic programming to solve this problem efficiently.\n   - Define a DP table `dp[i][j]` where:\n     - `i` represents the length of the sequence considered so far.\n     - `j` represents the last element in the sequence.\n     - `dp[i][j]` will store the number of valid permutations of length `i+1` ending with `j`.\n\n3. **Initialize the DP Table**:\n   - For the base case, when `i = 0`, there is only one permutation: `[0]`. So, `dp[0][0] = 1`.\n\n4. **Fill the DP Table**:\n   - Iterate over the length of the sequence from `1` to `n`.\n   - For each length `i`, iterate over all possible last elements `j` from `0` to `i`.\n   - Depending on the character `S[i-1]` (either 'D' or 'I'), update the DP table:\n     - If `S[i-1] == 'D'`, then the previous element must be greater than `j`. Sum all `dp[i-1][k]` where `k > j`.\n     - If `S[i-1] == 'I'`, then the previous element must be less than `j`. Sum all `dp[i-1][k]` where `k < j`.\n   - Update `dp[i][j]` with the computed sum.\n\n5. **Sum the Results**:\n   - After filling the DP table, the total number of valid permutations is the sum of all `dp[n][j]` for `j` from `0` to `n`.\n\n6. **Return the Result Modulo \\(10^9 + 7\\)**:\n   - Return the total number of valid permutations modulo \\(10^9 + 7\\).\n\n### Summary:\n- Use dynamic programming to count the number of valid permutations.\n- Initialize the DP table with the base case.\n- Fill the DP table based on the conditions specified by the characters in `S`.\n- Sum the results from the DP table and return the result modulo \\(10^9 + 7\\).",
+          "name": "numPermsDISequence",
+          "code": "def numPermsDISequence(S: str) -> int:\n    n = len(S)\n    MOD = 10**9 + 7\n    dp = [[0] * (n + 1) for _ in range(n + 1)]\n    dp[0][0] = 1\n    for i in range(1, n + 1):\n        for j in range(i + 1):\n            if S[i - 1] == 'D':\n                for k in range(j, i):\n                    dp[i][j] = (dp[i][j] + dp[i - 1][k]) % MOD\n            else:\n                for k in range(j):\n                    dp[i][j] = (dp[i][j] + dp[i - 1][k]) % MOD\n    return sum(dp[n]) % MOD",
+          "passed": true,
+          "error": "",
+          "test_results": [
+            {
+              "test_case": 1,
+              "passed": true,
+              "expected": "5",
+              "actual": "5",
+              "error": ""
+            }
+          ],
+          "pass_rate": "1/1"
+        },
+        "cot": {
+          "thinking": "STEP 1 - UNDERSTAND: The input is a string S consisting of 'D' and 'I' characters. The output is the number of valid permutations of integers {0, 1, ..., n} that satisfy the given conditions based on S. The conditions are: if S[i] == 'D', then P[i] > P[i+1], and if S[i] == 'I', then P[i] < P[i+1]. The result should be modulo 10^9 + 7. Example: 'DID' → 5 valid permutations. STEP 2 - PLAN: This is a dynamic programming problem. We'll use a DP table where dp[i][j] represents the number of valid permutations of length i+1 ending with j. We'll initialize dp[0][0] = 1 and fill the table based on the characters in S. For 'D', we sum dp[i-1][k] for k >= j, and for 'I', we sum dp[i-1][k] for k < j. The final result is the sum of dp[n][j] for all j. STEP 3 - EDGE CASES: Empty string → return 1 (only permutation [0]). All 'D's or all 'I's → specific counts based on the pattern. Maximum length (200) → ensure modulo operation handles large numbers. STEP 4 - IMPLEMENT: Initialize DP table, iterate through S, update DP based on 'D' or 'I', and return the sum modulo 10^9 + 7.",
+          "name": "numPermsDISequence",
+          "code": "class Solution:\n    def numPermsDISequence(self, S: str) -> int:\n        n = len(S)\n        MOD = 10**9 + 7\n        dp = [[0] * (n + 1) for _ in range(n + 1)]\n        dp[0][0] = 1\n        for i in range(1, n + 1):\n            if S[i - 1] == 'D':\n                for j in range(i, -1, -1):\n                    dp[i][j] = (dp[i][j + 1] + dp[i - 1][j]) % MOD\n            else:\n                for j in range(1, i + 1):\n                    dp[i][j] = (dp[i][j - 1] + dp[i - 1][j - 1]) % MOD\n        return sum(dp[n][j] for j in range(n + 1)) % MOD",
+          "passed": true,
+          "error": "",
+          "test_results": [
+            {
+              "test_case": 1,
+              "passed": true,
+              "expected": "5",
+              "actual": "5",
+              "error": ""
+            }
+          ],
+          "pass_rate": "1/1"
+        }
+      }
+    },
+    "problem_8": {
+      "prompt": "\nclass Solution:\n    def maxValueAfterReverse(self, nums: List[int]) -> int:\n            \"\"\"You are given an integer array nums. The value of this array is defined as the sum of |nums[i]-nums[i+1]| for all 0 <= i < nums.length-1.\nYou are allowed to select any subarray of the given array and reverse it. You can perform this operation only once.\nFind maximum possible value of the final array.\n \nExample 1:\nInput: nums = [2,3,1,5,4]\nOutput: 10\nExplanation: By reversing the subarray [3,1,5] the array becomes [2,5,1,3,4] whose value is 10.\n\nExample 2:\nInput: nums = [2,4,9,24,2,1,10]\nOutput: 68\n\n \nConstraints:\n\n1 <= nums.length <= 3*10^4\n-10^5 <= nums[i] <= 10^5\n    \"\"\"\n",
+      "strategies": {
+        "self_planning": {
+          "thinking": "### Step-by-Step Solution Plan:\n\n1. **Calculate the Initial Value**:\n   - Compute the initial value of the array by summing the absolute differences between consecutive elements: `initial_value = sum(abs(nums[i] - nums[i+1]) for i in range(len(nums)-1))`.\n\n2. **Identify Potential Gains from Reversing Subarrays**:\n   - The goal is to find the maximum possible gain in value by reversing any subarray. The gain can be calculated by considering the changes at the boundaries of the subarray.\n   - Define `gain` as the potential increase in value when reversing a subarray.\n\n3. **Calculate Gain for Reversing Subarrays Starting at the Beginning or Ending at the End**:\n   - For subarrays starting at the beginning (i.e., reversing `nums[0:i]`), calculate the gain as `abs(nums[i] - nums[0]) - abs(nums[i] - nums[i-1])`.\n   - For subarrays ending at the end (i.e., reversing `nums[i:n]`), calculate the gain as `abs(nums[i] - nums[-1]) - abs(nums[i] - nums[i+1])`.\n\n4. **Calculate Gain for Reversing Subarrays in the Middle**:\n   - For subarrays in the middle (i.e., reversing `nums[i:j]`), calculate the gain as `abs(nums[i] - nums[j]) + abs(nums[i-1] - nums[j+1]) - abs(nums[i] - nums[i-1]) - abs(nums[j] - nums[j+1])`.\n\n5. **Find the Maximum Gain**:\n   - Iterate through all possible subarrays and compute the gain for each scenario (beginning, end, and middle).\n   - Track the maximum gain found.\n\n6. **Compute the Final Value**:\n   - Add the maximum gain to the initial value to get the maximum possible value after reversing a subarray.\n\n7. **Return the Result**:\n   - Return the computed maximum value.\n\n### Summary:\nThe plan involves calculating the initial value of the array, identifying the maximum possible gain by reversing any subarray, and then adding this gain to the initial value to get the final result. The key is to efficiently compute the gain by considering different scenarios for subarray reversals.",
+          "name": "maxValueAfterReverse",
+          "code": "from typing import List\n\ndef maxValueAfterReverse(nums: List[int]) -> int:\n    n = len(nums)\n    if n == 1:\n        return 0\n    \n    # Calculate the initial value\n    initial_value = sum(abs(nums[i] - nums[i+1]) for i in range(n-1))\n    \n    # Initialize the maximum gain\n    max_gain = 0\n    \n    # Calculate gain for reversing subarrays starting at the beginning\n    for i in range(1, n):\n        gain = abs(nums[i] - nums[0]) - abs(nums[i] - nums[i-1])\n        max_gain = max(max_gain, gain)\n    \n    # Calculate gain for reversing subarrays ending at the end\n    for i in range(n-1):\n        gain = abs(nums[i] - nums[-1]) - abs(nums[i] - nums[i+1])\n        max_gain = max(max_gain, gain)\n    \n    # Calculate gain for reversing subarrays in the middle\n    for i in range(1, n-1):\n        for j in range(i, n-1):\n            gain = abs(nums[i] - nums[j]) + abs(nums[i-1] - nums[j+1]) - abs(nums[i] - nums[i-1]) - abs(nums[j] - nums[j+1])\n            max_gain = max(max_gain, gain)\n    \n    # Compute the final value\n    final_value = initial_value + max_gain\n    \n    return final_value",
+          "passed": true,
+          "error": "",
+          "test_results": [
+            {
+              "test_case": 1,
+              "passed": true,
+              "expected": "10",
+              "actual": "10",
+              "error": ""
+            }
+          ],
+          "pass_rate": "1/1"
+        },
+        "cot": {
+          "thinking": "STEP 1 - UNDERSTAND: The problem involves calculating the value of an array defined by the sum of absolute differences between consecutive elements. We can perform one operation to reverse any subarray to maximize this value. The examples show that reversing certain subarrays can increase the total value significantly. The constraints suggest we need an O(n) solution due to the potentially large input size. STEP 2 - PLAN: The key insight is that reversing a subarray only affects the differences at its boundaries. The original sum is fixed except for the four boundaries involved in the reversal (left-1 to left and right to right+1). We need to compute the maximum possible gain from reversing any subarray by considering these boundary differences. We can precompute the original sum, then find the maximum possible delta from reversing any subarray by checking all possible boundary pairs. STEP 3 - EDGE CASES: Single element array (no operation possible). Entire array reversed (same as original if palindromic). Subarrays at the start or end of the array (only one boundary affected). Negative numbers and zeros should also be handled correctly. STEP 4 - IMPLEMENT: Compute the original sum, then find the maximum possible gain from boundaries of all possible subarrays. The maximum gain comes from considering pairs (a, b) where a is before the subarray and b is after, or vice versa.",
+          "name": "maxValueAfterReverse",
+          "code": "class Solution:\n    def maxValueAfterReverse(self, nums: List[int]) -> int:\n        original_sum = sum(abs(nums[i] - nums[i+1]) for i in range(len(nums)-1))\n        \n        # Case 1: reverse a non-boundary subarray\n        max_gain = 0\n        for i in range(1, len(nums)-1):\n            # Reversing 0 to i\n            gain = abs(nums[i+1] - nums[0]) - abs(nums[i+1] - nums[i])\n            max_gain = max(max_gain, gain)\n            # Reversing i to end\n            gain = abs(nums[-1] - nums[i-1]) - abs(nums[i] - nums[i-1])\n            max_gain = max(max_gain, gain)\n        \n        # Case 2: pairs at boundaries\n        min_pair = float('inf')\n        max_pair = -float('inf')\n        for a, b in zip(nums, nums[1:]):\n            min_pair = min(min_pair, max(a, b))\n            max_pair = max(max_pair, min(a, b))\n        max_gain = max(max_gain, 2 * (max_pair - min_pair))\n        \n        return original_sum + max_gain",
+          "passed": true,
+          "error": "",
+          "test_results": [
+            {
+              "test_case": 1,
+              "passed": true,
+              "expected": "10",
+              "actual": "10",
+              "error": ""
+            }
+          ],
+          "pass_rate": "1/1"
+        }
+      }
+    },
+    "problem_9": {
+      "prompt": "\nclass Solution:\n    def leastOpsExpressTarget(self, x: int, target: int) -> int:\n            \"\"\"Given a single positive integer x, we will write an expression of the form x (op1) x (op2) x (op3) x ... where each operator op1, op2, etc. is either addition, subtraction, multiplication, or division (+, -, *, or /).  For example, with x = 3, we might write 3 * 3 / 3 + 3 - 3 which is a value of 3.\nWhen writing such an expression, we adhere to the following conventions:\n\nThe division operator (/) returns rational numbers.\nThere are no parentheses placed anywhere.\nWe use the usual order of operations: multiplication and division happens before addition and subtraction.\nIt's not allowed to use the unary negation operator (-).  For example, \"x - x\" is a valid expression as it only uses subtraction, but \"-x + x\" is not because it uses negation.\n\nWe would like to write an expression with the least number of operators such that the expression equals the given target.  Return the least number of operators used.\n \n\nExample 1:\nInput: x = 3, target = 19\nOutput: 5\nExplanation: 3 * 3 + 3 * 3 + 3 / 3.  The expression contains 5 operations.\n\nExample 2:\n\nInput: x = 5, target = 501\nOutput: 8\nExplanation: 5 * 5 * 5 * 5 - 5 * 5 * 5 + 5 / 5.  The expression contains 8 operations.\n\n\nExample 3:\nInput: x = 100, target = 100000000\nOutput: 3\nExplanation: 100 * 100 * 100 * 100.  The expression contains 3 operations.\n \n\n\n\nNote:\n\n2 <= x <= 100\n1 <= target <= 2 * 10^8\n    \"\"\"\n",
+      "strategies": {
+        "cot": {
+          "thinking": "STEP 1 - UNDERSTAND: The problem requires constructing an expression using the integer x and operators (+, -, *, /) to reach the target value with the fewest operators. The expression must follow specific rules: no parentheses, no unary negation, and standard operator precedence. Examples show that multiplication and division are used to quickly reach large targets, while addition and subtraction handle smaller adjustments. STEP 2 - PLAN: Use a dynamic programming approach to minimize the number of operators. Break down the target into smaller subproblems by considering operations with x. Use memoization to store intermediate results and avoid redundant calculations. The key is to explore all possible operations and choose the one that minimizes the operator count. STEP 3 - EDGE CASES: When target equals x, return 0 (no operators needed). When target is less than x, use addition or subtraction. When target is a multiple of x, use multiplication or division. Handle cases where x is 2 or 100, as these are boundary values. STEP 4 - IMPLEMENT: Implement a recursive function with memoization to explore all possible operations and return the minimum operator count.",
+          "name": "leastOpsExpressTarget",
+          "code": "class Solution:\n    def leastOpsExpressTarget(self, x: int, target: int) -> int:\n        from functools import lru_cache\n\n        @lru_cache(maxsize=None)\n        def dp(i, t):\n            if t == 0:\n                return 0\n            if t == 1:\n                return 1 if i == 0 else i\n            if i >= 39:\n                return float('inf')\n\n            remainder = t % x\n            quotient = t // x\n            res = remainder * (1 if i == 0 else i) + dp(i + 1, quotient)\n            res = min(res, (x - remainder) * (1 if i == 0 else i) + dp(i + 1, quotient + 1))\n            return res\n\n        return dp(0, target) - 1",
+          "passed": false,
+          "error": "Some test cases failed",
+          "test_results": [
+            {
+              "test_case": 1,
+              "passed": false,
+              "expected": "5",
+              "actual": "4",
+              "error": "Output mismatch"
+            }
+          ],
+          "pass_rate": "0/1"
+        },
+        "self_planning": {
+          "thinking": "### Step-by-Step Solution Plan:\n\n1. **Understand the Problem Requirements**:\n   - We need to express `target` using operations (+, -, *, /) on multiple instances of `x`.\n   - The goal is to minimize the number of operations used.\n   - Constraints: no parentheses, no unary negation, and operator precedence (*/ before +-).\n\n2. **Key Observations**:\n   - The expression can be broken down into terms involving `x^k` (e.g., `x^2`, `x^3`, etc.), combined with additions and subtractions.\n   - Division can only be used to represent `1` (i.e., `x/x`), which requires 2 operations.\n   - Multiplicative terms (like `x^k`) require `k-1` operations (e.g., `x*x` is 1 op).\n   - Additive/subtractive terms require additional operations to combine them.\n\n3. **Dynamic Programming Approach**:\n   - Use dynamic programming (DP) to memoize the minimum operations needed to reach intermediate values.\n   - Define `dp[t]` as the minimum operations to reach the value `t`.\n\n4. **Base Cases**:\n   - If `t == x`, then `dp[t] = 0` (no operations needed).\n   - If `t == 0`, it's unreachable without negation (invalid).\n   - If `t == 1`, it can be expressed as `x/x` (2 operations).\n\n5. **Recursive Case**:\n   - For a given `t`, find the smallest `k` such that `x^k` is close to `t`.\n   - Consider two possibilities around `x^k`:\n     - `t = x^k + remainder` (e.g., `t = x^2 + (t - x^2)`).\n     - `t = x^(k+1) - remainder` (e.g., `t = x^3 - (x^3 - t)`).\n   - For each possibility, compute the operations needed for the multiplicative part and the additive/subtractive remainder recursively.\n\n6. **Operations Calculation**:\n   - Multiplicative operations for `x^k` is `k-1`.\n   - Operations for the remainder is `dp[remainder]`.\n   - Additive operations for `+` or `-` is `1` each (except when remainder is zero).\n\n7. **Memoization**:\n   - Cache computed `dp[t]` values to avoid redundant calculations.\n   - Handle large `target` values efficiently by focusing on the closest `x^k` values.\n\n8. **Edge Cases**:\n   - If `t < x`, compare building up from `x^0` (1) or down from `x^1` (x).\n   - Special handling for `t == 1` (always `x/x`).\n\n9. **Final Result**:\n   - The result is `dp[target]`.\n\n### Plan Pseudocode (Algorithm Outline):\n1. Initialize a memoization dictionary `dp`.\n2. Define a recursive helper function `dfs(t)`:\n   - If `t` is in `dp`, return `dp[t]`.\n   - If `t == x`, return `0`.\n   - If `t == 1`, return `2` (for `x/x`).\n   - Find the largest `k` such that `x^k <= t` (using logarithms or loop).\n   - Compute operations for `x^k + (t - x^k)`:\n     - `operations_pos = (k - 1) + 1 + dfs(t - x^k)`.\n   - Compute operations for `x^(k+1) - (x^(k+1) - t)`:\n     - `operations_neg = (k) + 1 + dfs(x^(k+1) - t)`.\n   - Also consider cases where `k` might be `0` or `1` for small `t`.\n   - Set `dp[t]` as the minimum of `operations_pos` and `operations_neg`.\n   - Return `dp[t]`.\n3. Return `dfs(target)`. \n\n### Optimization Note:\n- For large `target`, avoid excessive recursion by checking `k` values smartly (e.g., logarithmic time).\n- Precompute powers of `x` up to `target` for efficiency.",
+          "name": "leastOpsExpressTarget",
+          "code": "import math\nfrom functools import lru_cache\n\nclass Solution:\n    def leastOpsExpressTarget(self, x: int, target: int) -> int:\n        @lru_cache(maxsize=None)\n        def dfs(t):\n            if t == x:\n                return 0\n            if t == 1:\n                return 2\n            if t < x:\n                return min(2 * t - 1, (x - t) * 2)\n            k = math.floor(math.log(t, x))\n            remainder = t - x**k\n            operations_pos = (k - 1) + 1 + dfs(remainder)\n            operations_neg = k + 1 + dfs(x**(k + 1) - t)\n            return min(operations_pos, operations_neg)\n        return dfs(target)",
+          "passed": false,
+          "error": "Some test cases failed",
+          "test_results": [
+            {
+              "test_case": 1,
+              "passed": false,
+              "expected": "[5]",
+              "actual": "",
+              "error": "maximum recursion depth exceeded"
+            }
+          ],
+          "pass_rate": "0/1"
+        }
+      }
+    },
+    "problem_10": {
+      "prompt": "\nclass Solution:\n    def longestCommonSubsequence(self, text1: str, text2: str) -> int:\n            \"\"\"Given two strings text1 and text2, return the length of their longest common subsequence.\nA subsequence of a string is a new string generated from the original string with some characters(can be none) deleted without changing the relative order of the remaining characters. (eg, \"ace\" is a subsequence of \"abcde\" while \"aec\" is not). A common subsequence of two strings is a subsequence that is common to both strings.\n \nIf there is no common subsequence, return 0.\n \nExample 1:\nInput: text1 = \"abcde\", text2 = \"ace\" \nOutput: 3  \nExplanation: The longest common subsequence is \"ace\" and its length is 3.\n\nExample 2:\nInput: text1 = \"abc\", text2 = \"abc\"\nOutput: 3\nExplanation: The longest common subsequence is \"abc\" and its length is 3.\n\nExample 3:\nInput: text1 = \"abc\", text2 = \"def\"\nOutput: 0\nExplanation: There is no such common subsequence, so the result is 0.\n\n \nConstraints:\n\n1 <= text1.length <= 1000\n1 <= text2.length <= 1000\nThe input strings consist of lowercase English characters only.\n    \"\"\"\n",
+      "strategies": {
+        "self_planning": {
+          "thinking": "1. **Initialize a DP Table**: Create a 2D array `dp` of size `(len(text1) + 1) x (len(text2) + 1)` initialized with zeros. `dp[i][j]` will store the length of the longest common subsequence (LCS) of `text1[0:i]` and `text2[0:j]`.\n\n2. **Iterate Through Both Strings**: Use nested loops to iterate through each character of `text1` and `text2`:\n   - Outer loop: Iterate through each character of `text1` (index `i`).\n   - Inner loop: Iterate through each character of `text2` (index `j`).\n\n3. **Compare Characters**:\n   - If `text1[i-1]` equals `text2[j-1]`, then `dp[i][j] = dp[i-1][j-1] + 1`. This means the current characters match, so the LCS length increases by 1.\n   - If `text1[i-1]` does not equal `text2[j-1]`, then `dp[i][j] = max(dp[i-1][j], dp[i][j-1])`. This means the current characters do not match, so the LCS length is the maximum of the LCS lengths from the previous steps.\n\n4. **Return the Result**: After filling the `dp` table, the value at `dp[len(text1)][len(text2)]` will be the length of the longest common subsequence. Return this value.\n\n5. **Edge Cases**:\n   - If either `text1` or `text2` is empty, return 0 immediately since there can be no common subsequence.\n   - If both strings are identical, return the length of either string as the LCS length.",
+          "name": "longestCommonSubsequence",
+          "code": "def longestCommonSubsequence(self, text1: str, text2: str) -> int:\n    m, n = len(text1), len(text2)\n    dp = [[0] * (n + 1) for _ in range(m + 1)]\n    for i in range(1, m + 1):\n        for j in range(1, n + 1):\n            if text1[i - 1] == text2[j - 1]:\n                dp[i][j] = dp[i - 1][j - 1] + 1\n            else:\n                dp[i][j] = max(dp[i - 1][j], dp[i][j - 1])\n    return dp[m][n]",
+          "passed": false,
+          "error": "Some test cases failed",
+          "test_results": [
+            {
+              "test_case": 1,
+              "passed": false,
+              "expected": "[3]",
+              "actual": "",
+              "error": "longestCommonSubsequence() missing 1 required positional argument: 'text2'"
+            }
+          ],
+          "pass_rate": "0/1"
+        },
+        "cot": {
+          "thinking": "STEP 1 - UNDERSTAND: The problem requires finding the length of the longest common subsequence (LCS) between two strings. A subsequence is a sequence that appears in the same relative order but not necessarily contiguous. The inputs are two strings, and the output is an integer representing the length of the LCS. Examples show that the LCS can be the entire string if they are identical, or a subset of characters if they share some common sequence. If no common subsequence exists, the output is 0. Constraints indicate that both strings can be up to 1000 characters long and consist of lowercase English letters. STEP 2 - PLAN: The problem is a classic dynamic programming (DP) problem. We can use a 2D DP table where dp[i][j] represents the length of the LCS of text1[0..i-1] and text2[0..j-1]. Initialize a DP table with dimensions (len(text1)+1) x (len(text2)+1). Iterate through each character of both strings. If the characters match, dp[i][j] = dp[i-1][j-1] + 1. If they don't match, dp[i][j] = max(dp[i-1][j], dp[i][j-1]). The final answer will be in dp[len(text1)][len(text2)]. Time complexity: O(m*n), where m and n are the lengths of text1 and text2. Space complexity: O(m*n) for the DP table. STEP 3 - EDGE CASES: Both strings are empty → return 0. One string is empty → return 0. Both strings are identical → return the length of the string. No common subsequence → return 0. STEP 4 - IMPLEMENT: Implement the DP solution as described, ensuring to handle all edge cases.",
+          "name": "longestCommonSubsequence",
+          "code": "class Solution:\n    def longestCommonSubsequence(self, text1: str, text2: str) -> int:\n        m, n = len(text1), len(text2)\n        dp = [[0] * (n + 1) for _ in range(m + 1)]\n        for i in range(1, m + 1):\n            for j in range(1, n + 1):\n                if text1[i - 1] == text2[j - 1]:\n                    dp[i][j] = dp[i - 1][j - 1] + 1\n                else:\n                    dp[i][j] = max(dp[i - 1][j], dp[i][j - 1])\n        return dp[m][n]",
+          "passed": false,
+          "error": "Some test cases failed",
+          "test_results": [
+            {
+              "test_case": 1,
+              "passed": false,
+              "expected": "[3]",
+              "actual": "",
+              "error": "longestCommonSubsequence() missing 1 required positional argument: 'text2'"
+            }
+          ],
+          "pass_rate": "0/1"
+        }
+      }
+    },
+    "problem_11": {
+      "prompt": "\ndef exchange_sort(sequence):\n\t    \"\"\"# Task\n Sorting is one of the most basic computational devices used in Computer Science. \n \n Given a sequence (length ≤ 1000) of 3 different key values (7, 8, 9), your task is to find the minimum number of exchange operations necessary to make the sequence sorted. \n\n One operation is the switching of 2 key values in the sequence.\n\n# Example\n\n For `sequence = [7, 7, 8, 8, 9, 9]`, the result should be `0`.\n \n It's already a sorted sequence.\n\n For `sequence = [9, 7, 8, 8, 9, 7]`, the result should be `1`.\n \n We can switching `sequence[0]` and `sequence[5]`.\n \n For `sequence = [8, 8, 7, 9, 9, 9, 8, 9, 7]`, the result should be `4`.\n \n We can:\n```\n [8, 8, 7, 9, 9, 9, 8, 9, 7] \n switching sequence[0] and sequence[3]\n --> [9, 8, 7, 8, 9, 9, 8, 9, 7]\n switching sequence[0] and sequence[8]\n --> [7, 8, 7, 8, 9, 9, 8, 9, 9]\n switching sequence[1] and sequence[2]\n --> [7, 7, 8, 8, 9, 9, 8, 9, 9]\n switching sequence[5] and sequence[7]\n --> [7, 7, 8, 8, 8, 9, 9, 9, 9] \n```\nSo `4` is the minimum number of operations for the sequence to become sorted.\n\n# Input/Output\n\n\n - `[input]` integer array `sequence`\n\n  The Sequence.\n\n\n - `[output]` an integer\n\n  the minimum number of operations.\n    \"\"\"\n",
+      "strategies": {
+        "cot": {
+          "thinking": "STEP 1 - UNDERSTAND: The input is a sequence of integers containing only the values 7, 8, and 9. The output is the minimum number of swaps needed to sort the sequence in non-decreasing order. Examples show that the sequence can already be sorted (0 swaps), or require multiple swaps. STEP 2 - PLAN: We need to determine the correct positions for each value (7, 8, 9) and count the number of swaps required to place each value in its correct position. We can create a sorted version of the sequence and compare it with the original sequence to identify mismatches. For each mismatch, we swap the elements to their correct positions and count the swaps. STEP 3 - EDGE CASES: The sequence is already sorted (0 swaps). The sequence contains only one type of value (0 swaps). The sequence is in reverse order (maximum swaps). STEP 4 - IMPLEMENT: We will iterate through the sequence, compare each element with the sorted version, and perform swaps as needed, counting the number of swaps.",
+          "name": "exchange_sort",
+          "code": "def exchange_sort(sequence):\n    sorted_seq = sorted(sequence)\n    swaps = 0\n    for i in range(len(sequence)):\n        if sequence[i] != sorted_seq[i]:\n            j = i + 1\n            while j < len(sequence) and sequence[j] != sorted_seq[i]:\n                j += 1\n            sequence[i], sequence[j] = sequence[j], sequence[i]\n            swaps += 1\n    return swaps",
+          "passed": true,
+          "error": "",
+          "test_results": [
+            {
+              "test_case": 1,
+              "passed": true,
+              "expected": "4",
+              "actual": "4",
+              "error": ""
+            },
+            {
+              "test_case": 2,
+              "passed": true,
+              "expected": "1",
+              "actual": "1",
+              "error": ""
+            },
+            {
+              "test_case": 3,
+              "passed": true,
+              "expected": "1",
+              "actual": "1",
+              "error": ""
+            }
+          ],
+          "pass_rate": "3/3"
+        },
+        "self_planning": {
+          "thinking": "### Step-by-Step Solution Plan:\n\n1. **Identify the Sorted Sequence**:\n   - Determine what the sorted version of the sequence should look like. Since the sequence contains only the values 7, 8, and 9, the sorted sequence will have all 7s first, followed by all 8s, and then all 9s.\n\n2. **Count the Occurrences**:\n   - Count how many 7s, 8s, and 9s are in the sequence. This will help in determining the correct positions for each value in the sorted sequence.\n\n3. **Determine Correct Positions**:\n   - Based on the counts, determine the correct positions for each value in the sorted sequence:\n     - The first `count_7` positions should be 7s.\n     - The next `count_8` positions should be 8s.\n     - The remaining positions should be 9s.\n\n4. **Identify Mismatches**:\n   - Compare the original sequence with the sorted sequence to identify mismatches. For each position, if the value in the original sequence does not match the value in the sorted sequence, note the mismatch.\n\n5. **Calculate Minimum Swaps**:\n   - For each mismatch, determine the minimum number of swaps required to correct it:\n     - If a 7 is in the 8s section, swap it with an 8 in the 7s section.\n     - If a 7 is in the 9s section, swap it with a 9 in the 7s section.\n     - Similarly, handle mismatches for 8s and 9s.\n   - Count the number of swaps needed to correct all mismatches.\n\n6. **Return the Result**:\n   - The total number of swaps calculated in the previous step is the minimum number of exchange operations required to sort the sequence. Return this value as the result.\n\n### Example Walkthrough:\nFor `sequence = [8, 8, 7, 9, 9, 9, 8, 9, 7]`:\n- Sorted sequence: `[7, 7, 8, 8, 8, 9, 9, 9, 9]`.\n- Mismatches:\n  - Position 0: 8 (should be 7).\n  - Position 2: 7 (should be 8).\n  - Position 6: 8 (should be 9).\n  - Position 8: 7 (should be 9).\n- Swaps:\n  - Swap position 0 (8) with position 8 (7).\n  - Swap position 2 (7) with position 3 (8).\n  - Swap position 6 (8) with position 5 (9).\n  - Swap position 8 (7) with position 7 (9).\n- Total swaps: 4.\n\nThus, the minimum number of operations is `4`.",
+          "name": "exchange_sort",
+          "code": "def exchange_sort(sequence):\n    # Step 1: Identify the sorted sequence\n    sorted_sequence = sorted(sequence)\n    \n    # Step 2: Count the occurrences of 7, 8, and 9\n    count_7 = sequence.count(7)\n    count_8 = sequence.count(8)\n    count_9 = sequence.count(9)\n    \n    # Step 3: Determine correct positions\n    # The first count_7 positions should be 7s\n    # The next count_8 positions should be 8s\n    # The remaining positions should be 9s\n    \n    # Step 4: Identify mismatches\n    mismatches = []\n    for i in range(len(sequence)):\n        if sequence[i] != sorted_sequence[i]:\n            mismatches.append(i)\n    \n    # Step 5: Calculate minimum swaps\n    swaps = 0\n    sequence_copy = sequence.copy()\n    for i in mismatches:\n        if sequence_copy[i] != sorted_sequence[i]:\n            # Find the correct value to swap with\n            for j in range(i + 1, len(sequence_copy)):\n                if sequence_copy[j] == sorted_sequence[i]:\n                    # Swap the values\n                    sequence_copy[i], sequence_copy[j] = sequence_copy[j], sequence_copy[i]\n                    swaps += 1\n                    break\n    \n    # Step 6: Return the result\n    return swaps",
+          "passed": false,
+          "error": "Some test cases failed",
+          "test_results": [
+            {
+              "test_case": 1,
+              "passed": false,
+              "expected": "4",
+              "actual": "0",
+              "error": "Output mismatch"
+            },
+            {
+              "test_case": 2,
+              "passed": false,
+              "expected": "1",
+              "actual": "0",
+              "error": "Output mismatch"
+            },
+            {
+              "test_case": 3,
+              "passed": false,
+              "expected": "1",
+              "actual": "0",
+              "error": "Output mismatch"
+            }
+          ],
+          "pass_rate": "0/3"
+        }
+      }
+    },
+    "problem_12": {
+      "prompt": "\nclass Solution:\n    def minimumTotal(self, triangle: List[List[int]]) -> int:\n            \"\"\"Given a triangle, find the minimum path sum from top to bottom. Each step you may move to adjacent numbers on the row below.\n\nFor example, given the following triangle\n\n\n[\n     [2],\n    [3,4],\n   [6,5,7],\n  [4,1,8,3]\n]\n\n\nThe minimum path sum from top to bottom is 11 (i.e., 2 + 3 + 5 + 1 = 11).\n\nNote:\n\nBonus point if you are able to do this using only O(n) extra space, where n is the total number of rows in the triangle.\n    \"\"\"\n",
+      "strategies": {
+        "cot": {
+          "thinking": "STEP 1 - UNDERSTAND: The input is a triangle represented as a list of lists, where each sublist corresponds to a row in the triangle. The output is the minimum sum of a path from the top to the bottom, where you can only move to adjacent numbers on the row below. Example: [[2],[3,4],[6,5,7],[4,1,8,3]] → 11 (2 + 3 + 5 + 1). STEP 2 - PLAN: Use dynamic programming to solve this problem efficiently. Start from the bottom row and work upwards, updating each element to be the sum of itself and the minimum of its two adjacent elements below. This way, the top element will eventually hold the minimum path sum. Time complexity: O(n^2), Space complexity: O(n) (since we modify the triangle in place). STEP 3 - EDGE CASES: Single-row triangle → return the only element. Triangle with negative numbers → ensure the algorithm handles them correctly. Triangle with all identical numbers → the sum will be straightforward. STEP 4 - IMPLEMENT: Implement the dynamic programming approach by iterating from the second last row upwards and updating each element with the minimum of its two adjacent elements below.",
+          "name": "minimumTotal",
+          "code": "class Solution:\n    def minimumTotal(self, triangle: List[List[int]]) -> int:\n        for i in range(len(triangle) - 2, -1, -1):\n            for j in range(len(triangle[i])):\n                triangle[i][j] += min(triangle[i + 1][j], triangle[i + 1][j + 1])\n        return triangle[0][0]",
+          "passed": true,
+          "error": "",
+          "test_results": [
+            {
+              "test_case": 1,
+              "passed": true,
+              "expected": "-10",
+              "actual": "-10",
+              "error": ""
+            },
+            {
+              "test_case": 2,
+              "passed": true,
+              "expected": "11",
+              "actual": "11",
+              "error": ""
+            }
+          ],
+          "pass_rate": "2/2"
+        },
+        "self_planning": {
+          "thinking": "1. **Understand the Problem**: We need to find the minimum path sum from the top to the bottom of a triangle. At each step, you can move to an adjacent number on the row below.\n\n2. **Identify the Approach**: Use dynamic programming to build up the solution from the bottom of the triangle to the top. This allows us to minimize the path sum efficiently.\n\n3. **Initialize the DP Array**: Create a DP array that will store the minimum path sum for each position in the triangle. Initialize it with the values of the bottom row of the triangle.\n\n4. **Iterate from the Second Last Row to the Top**:\n   - For each row, starting from the second last row and moving upwards:\n     - For each element in the row, update the DP array to store the minimum path sum by choosing the minimum of the two adjacent elements from the row below and adding the current element's value.\n\n5. **Return the Result**: After processing all rows, the first element of the DP array will contain the minimum path sum from the top to the bottom of the triangle.\n\n6. **Optimize Space**: To achieve O(n) space complexity, use the same DP array and update it in place as you iterate through the rows.\n\n7. **Final Output**: Return the value stored in the first element of the DP array as the minimum path sum.",
+          "name": "minimumTotal",
+          "code": "def minimumTotal(self, triangle: List[List[int]]) -> int:\n    if not triangle:\n        return 0\n    \n    # Initialize the DP array with the last row of the triangle\n    dp = triangle[-1]\n    \n    # Iterate from the second last row to the top\n    for i in range(len(triangle) - 2, -1, -1):\n        for j in range(len(triangle[i])):\n            # Update the DP array to store the minimum path sum\n            dp[j] = triangle[i][j] + min(dp[j], dp[j + 1])\n    \n    # The first element of the DP array will contain the minimum path sum\n    return dp[0]",
+          "passed": false,
+          "error": "Some test cases failed",
+          "test_results": [
+            {
+              "test_case": 1,
+              "passed": false,
+              "expected": "[-10]",
+              "actual": "",
+              "error": "minimumTotal() missing 1 required positional argument: 'triangle'"
+            },
+            {
+              "test_case": 2,
+              "passed": false,
+              "expected": "[11]",
+              "actual": "",
+              "error": "minimumTotal() missing 1 required positional argument: 'triangle'"
+            }
+          ],
+          "pass_rate": "0/2"
+        }
+      }
+    },
+    "problem_13": {
+      "prompt": "\nclass Solution:\n    def longestConsecutive(self, nums: List[int]) -> int:\n            \"\"\"Given an unsorted array of integers, find the length of the longest consecutive elements sequence.\n\nYour algorithm should run in O(n) complexity.\n\nExample:\n\n\nInput: [100, 4, 200, 1, 3, 2]\nOutput: 4\nExplanation: The longest consecutive elements sequence is [1, 2, 3, 4]. Therefore its length is 4.\n    \"\"\"\n",
+      "strategies": {
+        "self_planning": {
+          "thinking": "1. **Initialize a set**: Convert the input list `nums` into a set named `num_set` for O(1) look-up times.\n\n2. **Initialize a variable**: Create a variable `longest_streak` to keep track of the length of the longest consecutive sequence found. Set it to 0 initially.\n\n3. **Iterate through each number**: Loop through each number in `num_set`.\n\n4. **Check for the start of a sequence**: For each number, check if the number immediately before it (i.e., `num - 1`) is not in `num_set`. If it is not, this number could be the start of a new consecutive sequence.\n\n5. **Build the sequence**: If the number is the start of a sequence, initialize a `current_streak` variable to 1. Then, increment the number by 1 and check if the new number exists in `num_set`. If it does, increment `current_streak` and continue this process until the sequence ends.\n\n6. **Update the longest streak**: After building a sequence, compare `current_streak` with `longest_streak` and update `longest_streak` if `current_streak` is greater.\n\n7. **Return the result**: After iterating through all numbers, return `longest_streak` as the length of the longest consecutive sequence.\n\nThis approach ensures that each number is processed at most twice (once in the outer loop and once in the inner loop), resulting in an overall time complexity of O(n).",
+          "name": "longestConsecutive",
+          "code": "def longestConsecutive(nums):\n    if not nums:\n        return 0\n    \n    num_set = set(nums)\n    longest_streak = 0\n    \n    for num in num_set:\n        if num - 1 not in num_set:\n            current_num = num\n            current_streak = 1\n            \n            while current_num + 1 in num_set:\n                current_num += 1\n                current_streak += 1\n            \n            longest_streak = max(longest_streak, current_streak)\n    \n    return longest_streak",
+          "passed": true,
+          "error": "",
+          "test_results": [
+            {
+              "test_case": 1,
+              "passed": true,
+              "expected": "4",
+              "actual": "4",
+              "error": ""
+            }
+          ],
+          "pass_rate": "1/1"
+        },
+        "cot": {
+          "thinking": "STEP 1 - UNDERSTAND: The input is an unsorted list of integers, and the output is an integer representing the length of the longest consecutive sequence. The sequence must consist of consecutive integers, but they can be in any order in the input. The algorithm must run in O(n) time. Example: [100, 4, 200, 1, 3, 2] → 4 because [1, 2, 3, 4] is the longest consecutive sequence. STEP 2 - PLAN: Use a set to store all numbers for O(1) lookups. Iterate through each number and check if it is the start of a sequence (i.e., num-1 is not in the set). If it is the start, count the length of the sequence by incrementing num until num+1 is not in the set. Keep track of the maximum sequence length found. Time: O(n) because each number is processed at most twice (once in the outer loop and once in the inner loop). Space: O(n) for the set. STEP 3 - EDGE CASES: Empty list → return 0. Single element → return 1. All elements are the same → return 1. Negative numbers → handle them as normal integers. Duplicates → set will handle them. STEP 4 - IMPLEMENT: Use a set for O(1) lookups. Iterate through the list, check if the current number is the start of a sequence, and count the length of the sequence if it is. Keep track of the maximum sequence length.",
+          "name": "longestConsecutive",
+          "code": "class Solution:\n    def longestConsecutive(self, nums: List[int]) -> int:\n        num_set = set(nums)\n        longest = 0\n        for num in num_set:\n            if num - 1 not in num_set:\n                current_num = num\n                current_streak = 1\n                while current_num + 1 in num_set:\n                    current_num += 1\n                    current_streak += 1\n                longest = max(longest, current_streak)\n        return longest",
+          "passed": true,
+          "error": "",
+          "test_results": [
+            {
+              "test_case": 1,
+              "passed": true,
+              "expected": "4",
+              "actual": "4",
+              "error": ""
+            }
+          ],
+          "pass_rate": "1/1"
+        }
+      }
+    }
+  },
+  "summary": {
+    "cot": {
+      "total_problems": 14,
+      "fully_passed": 6,
+      "pass_rate": "6/14 (42.9%)"
+    },
+    "self_planning": {
+      "total_problems": 14,
+      "fully_passed": 5,
+      "pass_rate": "5/14 (35.7%)"
+    }
+  }
+}

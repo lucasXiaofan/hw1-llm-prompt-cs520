@@ -62,7 +62,54 @@ MINIMAL_PLAN_PROMPT = """Create a numbered step-by-step solution plan. Focus on 
 
 MINIMAL_CODE_PROMPT = """Implement the plan in Python. Output JSON: {"name": "function_name", "code": "def function_name(...):\\n    ..."}"""
 
+SECOND_PLAN_PROMPT = """
+1. Restate the problem in your own words.
+2. Describe the algorithm and why it works.
+3. List edge cases and expected behavior.
+4. Verify the plan against provided examples.
 
+"""
+SECOND_CODE_PROMPT = """
+Implement the plan in Python.
+
+OUTPUT FORMAT:
+Only return valid JSON:
+{
+  "name": "<function_name>",
+  "code": "def function_name(...):\n    ..."
+}
+
+RULES:
+- Always produce both "name" and "code".
+- "code" must be a complete Python function body.
+- Do NOT include markdown, extra text, or invalid JSON.
+- Double-check your implementation matches all given examples before outputting.
+"""
+
+SECOND_COT = """
+PLAN PHASE:
+1. Restate the problem in your own words.
+2. Describe the algorithm and why it works.
+3. List edge cases and expected behavior.
+4. Verify the plan against provided examples.
+
+CODE PHASE:
+Implement the plan in Python.
+
+OUTPUT FORMAT:
+Only return valid JSON:
+{
+  "name": "<function_name>",
+  "code": "def function_name(...):\n    ..."
+}
+
+RULES:
+- Always produce both "name" and "code".
+- "code" must be a complete Python function body.
+- Do NOT include markdown, extra text, or invalid JSON.
+- Double-check your implementation matches all given examples before outputting.
+
+"""
 
 # System prompts
 STEPWISE_COT = """You are an expert programmer. For each problem, follow this step-by-step reasoning process:

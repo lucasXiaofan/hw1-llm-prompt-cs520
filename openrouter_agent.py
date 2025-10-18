@@ -80,7 +80,7 @@ def execute_tool(name, args):
     return "Unknown tool"
 
 # Agent with max iterations
-def agent(user_prompt, system_message=None, max_iterations=10, model_name="deepseek/deepseek-chat-v3", tools=None):
+def agent(user_prompt, system_message=None, max_iterations=15, model_name="deepseek/deepseek-chat-v3", tools=None):
     messages = []
 
     # Use provided tools or default to agent_tools
@@ -336,10 +336,6 @@ Example for "is_prime":
 
 
 
-
-
-
-
     user_task = """
         "Given an array representing a branch of a tree that has non-negative integer nodes
     your task is to pluck one of the nodes and return it.
@@ -406,7 +402,8 @@ content
     history, answer = agent(
         user_prompt=test_p,
         system_message=normal_coding_agent,
-        max_iterations=10
+        max_iterations=15,
+        tools=agent_tools
     )
 
     print(f"\n{'='*60}")

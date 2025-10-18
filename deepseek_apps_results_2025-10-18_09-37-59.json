@@ -1,0 +1,200 @@
+{
+  "model": "deepseek/deepseek-chat-v3",
+  "strategies": {
+    "cot": {
+      "system_prompt": "You are an expert programmer. For each problem, follow this step-by-step reasoning process:\n\nSTEP 1 - UNDERSTAND: Read the problem carefully\n- What are the inputs and outputs?\n- What do the examples show?\n- What are the constraints?\n\nSTEP 2 - PLAN: Design your solution\n- What algorithm or approach should you use?\n- What data structures do you need?\n- What's the time/space complexity?\n\nSTEP 3 - EDGE CASES: Identify special cases\n- Empty inputs, single elements, duplicates\n- Boundary values (0, negative, maximum)\n- Invalid or unusual inputs\n\nSTEP 4 - IMPLEMENT: Write clean, correct code\n- Handle all edge cases\n- Use clear variable names\n- Ensure logic is sound\n\nEXAMPLE - Problem: Find the sum of all even numbers in a list\n{\n  \"thinking\": \"STEP 1 - UNDERSTAND: Input is a list of integers, output is a single integer (the sum). Need to identify even numbers (divisible by 2) and add them together. Example: [1,2,3,4] → 2+4 = 6. STEP 2 - PLAN: Use a filtering approach - iterate through the list, check each number with modulo operator (n % 2 == 0), sum the filtered results. Can use generator expression with sum() for clean implementation. Time: O(n), Space: O(1). STEP 3 - EDGE CASES: Empty list → return 0 (sum of nothing). No even numbers → return 0. All even numbers → sum all. List with zero → 0 is even, include it. Negative evens → -2, -4 are even, include them. STEP 4 - IMPLEMENT: Use sum() with generator expression for clarity. The condition 'n % 2 == 0' handles all cases including negatives and zero correctly.\",\n  \"name\": \"sum_evens\",\n  \"code\": \"def sum_evens(numbers):\n    return sum(n for n in numbers if n % 2 == 0)\"\n}\n\nAfter your reasoning, output ONLY this JSON format (no markdown fences, no extra text):\n{\n  \"thinking\": \"<your step-by-step reasoning>\",\n  \"name\": \"<function_name>\",\n  \"code\": \"<complete_python_function_code_only>\"\n\n\nCRITICAL: The \"code\" field must contain ONLY the function code, no thinking or comments.",
+      "description": "Chain-of-Thought strategy (one LLM call)."
+    },
+    "self_planning": {
+      "system_prompt": "PLAN: Create a numbered step-by-step solution plan. Focus on algorithm, not code. Output only the plan.\nCODE: Implement the plan in Python. Output JSON: {\"name\": \"function_name\", \"code\": \"def function_name(...):\\n    ...\"}",
+      "description": "Self-Planning strategy (two LLM calls)."
+    }
+  },
+  "tests": {
+    "problem_0": {
+      "prompt": "\ndef mix(s1, s2):\n\t    \"\"\"Given two strings s1 and s2, we want to visualize how different the two strings are.\nWe will only take into account the *lowercase* letters (a to z).\nFirst let us count the frequency of each *lowercase* letters in s1 and s2.\n\n`s1 = \"A aaaa bb c\"`\n\n`s2 = \"& aaa bbb c d\"`\n\n`s1 has 4 'a', 2 'b', 1 'c'`\n\n`s2 has 3 'a', 3 'b', 1 'c', 1 'd'`\n\nSo the maximum for 'a' in s1 and s2 is 4 from s1; the maximum for 'b' is 3 from s2.\nIn the following we will not consider letters when the maximum of their occurrences\nis less than or equal to 1.\n\nWe can resume the differences between s1 and s2 in the following string:\n`\"1:aaaa/2:bbb\"`\nwhere `1` in `1:aaaa` stands for string s1 and `aaaa` because the maximum for `a` is 4.\nIn the same manner `2:bbb` stands for string s2 and `bbb` because the maximum for `b` is 3.\n\nThe task is to produce a string in which each *lowercase* letters of s1 or s2 appears as many times as\nits maximum if this maximum is *strictly greater than 1*; these letters will be prefixed by the \nnumber of the string where they appear with their maximum value and `:`. \nIf the maximum is in s1 as well as in s2 the prefix is `=:`.\n\nIn the result, substrings (a substring is for example 2:nnnnn or 1:hhh; it contains the prefix) will be in decreasing order of their length and when they have the same length sorted in ascending lexicographic order (letters and digits - more precisely sorted by codepoint); the different groups will be separated by '/'. See examples and \"Example Tests\".\n\nHopefully other examples can make this clearer.\n\n```\ns1 = \"my&friend&Paul has heavy hats! &\"\ns2 = \"my friend John has many many friends &\"\nmix(s1, s2) --> \"2:nnnnn/1:aaaa/1:hhh/2:mmm/2:yyy/2:dd/2:ff/2:ii/2:rr/=:ee/=:ss\"\n\ns1 = \"mmmmm m nnnnn y&friend&Paul has heavy hats! &\"\ns2 = \"my frie n d Joh n has ma n y ma n y frie n ds n&\"\nmix(s1, s2) --> \"1:mmmmmm/=:nnnnnn/1:aaaa/1:hhh/2:yyy/2:dd/2:ff/2:ii/2:rr/=:ee/=:ss\"\n\ns1=\"Are the kids at home? aaaaa fffff\"\ns2=\"Yes they are here! aaaaa fffff\"\nmix(s1, s2) --> \"=:aaaaaa/2:eeeee/=:fffff/1:tt/2:rr/=:hh\"\n```\n# Note for Swift, R, PowerShell\nThe prefix `=:` is replaced by `E:`\n``` \ns1 = \"mmmmm m nnnnn y&friend&Paul has heavy hats! &\"\ns2 = \"my frie n d Joh n has ma n y ma n y frie n ds n&\"\nmix(s1, s2) --> \"1:mmmmmm/E:nnnnnn/1:aaaa/1:hhh/2:yyy/2:dd/2:ff/2:ii/2:rr/E:ee/E:ss\"\n```\n    \"\"\"\n",
+      "strategies": {
+        "self_planning": {
+          "thinking": "1. **Filter and Count Letters**: Extract lowercase letters from both `s1` and `s2`. Count the frequency of each letter in both strings.\n\n2. **Determine Maximum Frequencies**: For each lowercase letter, determine the maximum frequency between `s1` and `s2`. Ignore letters where the maximum frequency is less than or equal to 1.\n\n3. **Identify Source of Maximum Frequency**: For each letter, identify whether the maximum frequency comes from `s1`, `s2`, or both (i.e., the frequencies are equal).\n\n4. **Construct Substrings**: For each letter, construct a substring in the format `prefix:letters`, where:\n   - `prefix` is `1:` if the maximum frequency is from `s1`, `2:` if from `s2`, or `=:` if the frequencies are equal.\n   - `letters` is the letter repeated as many times as its maximum frequency.\n\n5. **Sort Substrings**: Sort the substrings first by length in descending order. If lengths are equal, sort them lexicographically in ascending order.\n\n6. **Combine Substrings**: Join the sorted substrings with `/` as the separator to form the final result string.\n\n7. **Return the Result**: Output the constructed result string.",
+          "name": "mix",
+          "code": "def mix(s1, s2):\n    from collections import defaultdict\n\n    # Step 1: Filter and count lowercase letters in s1 and s2\n    def count_letters(s):\n        count = defaultdict(int)\n        for char in s:\n            if char.islower():\n                count[char] += 1\n        return count\n\n    count1 = count_letters(s1)\n    count2 = count_letters(s2)\n\n    # Step 2: Determine maximum frequencies and ignore letters with max <= 1\n    max_counts = {}\n    for char in set(count1.keys()).union(set(count2.keys())):\n        max_count = max(count1.get(char, 0), count2.get(char, 0))\n        if max_count > 1:\n            max_counts[char] = max_count\n\n    # Step 3: Identify source of maximum frequency\n    result = []\n    for char, max_count in max_counts.items():\n        if count1.get(char, 0) > count2.get(char, 0):\n            prefix = '1:'\n        elif count2.get(char, 0) > count1.get(char, 0):\n            prefix = '2:'\n        else:\n            prefix = '=:'\n        result.append(f\"{prefix}{char * max_count}\")\n\n    # Step 5: Sort substrings by length descending, then lexicographically ascending\n    result.sort(key=lambda x: (-len(x), x))\n\n    # Step 6: Combine substrings with '/' as separator\n    return '/'.join(result)",
+          "passed": true,
+          "error": "",
+          "test_results": [
+            {
+              "test_case": 1,
+              "passed": true,
+              "expected": "1:ooo/1:uuu/2:sss/=:nnn/1:ii/2:aa/2:dd/2:ee/=:gg",
+              "actual": "1:ooo/1:uuu/2:sss/=:nnn/1:ii/2:aa/2:dd/2:ee/=:gg",
+              "error": ""
+            },
+            {
+              "test_case": 2,
+              "passed": true,
+              "expected": "2:eeeee/2:yy/=:hh/=:rr",
+              "actual": "2:eeeee/2:yy/=:hh/=:rr",
+              "error": ""
+            },
+            {
+              "test_case": 3,
+              "passed": true,
+              "expected": "1:ee/1:ll/1:oo",
+              "actual": "1:ee/1:ll/1:oo",
+              "error": ""
+            }
+          ],
+          "pass_rate": "3/3"
+        },
+        "cot": {
+          "thinking": "STEP 1 - UNDERSTAND: The function takes two strings s1 and s2 as input and returns a formatted string that visualizes the differences in lowercase letter frequencies between the two strings. Only lowercase letters (a-z) are considered, and only those with a maximum frequency greater than 1 in either string are included. The result is formatted with prefixes indicating which string has the maximum frequency (1:, 2:, or =:), and the substrings are ordered by length (descending) and lexicographically (ascending) when lengths are equal. STEP 2 - PLAN: 1. Count the frequency of each lowercase letter in s1 and s2. 2. Determine the maximum frequency for each letter across both strings. 3. Filter out letters with a maximum frequency <= 1. 4. For each remaining letter, determine the prefix based on which string has the maximum frequency. 5. Sort the results first by length (descending), then lexicographically (ascending). 6. Join the sorted results with '/' as the separator. STEP 3 - EDGE CASES: Empty strings, strings with no lowercase letters, strings with all letters having frequency <= 1, strings with identical frequencies for all letters. STEP 4 - IMPLEMENT: Use collections.Counter to count frequencies, filter and sort the results as per the requirements, and format the output string.",
+          "name": "mix",
+          "code": "from collections import Counter\ndef mix(s1, s2):\n    c1 = Counter(filter(str.islower, s1))\n    c2 = Counter(filter(str.islower, s2))\n    result = []\n    for char in set(c1.keys()).union(set(c2.keys())):\n        max_count = max(c1.get(char, 0), c2.get(char, 0))\n        if max_count > 1:\n            if c1.get(char, 0) > c2.get(char, 0):\n                result.append(f'1:{char * max_count}')\n            elif c2.get(char, 0) > c1.get(char, 0):\n                result.append(f'2:{char * max_count}')\n            else:\n                result.append(f'=:{char * max_count}')\n    result.sort(key=lambda x: (-len(x), x))\n    return '/'.join(result)",
+          "passed": true,
+          "error": "",
+          "test_results": [
+            {
+              "test_case": 1,
+              "passed": true,
+              "expected": "1:ooo/1:uuu/2:sss/=:nnn/1:ii/2:aa/2:dd/2:ee/=:gg",
+              "actual": "1:ooo/1:uuu/2:sss/=:nnn/1:ii/2:aa/2:dd/2:ee/=:gg",
+              "error": ""
+            },
+            {
+              "test_case": 2,
+              "passed": true,
+              "expected": "2:eeeee/2:yy/=:hh/=:rr",
+              "actual": "2:eeeee/2:yy/=:hh/=:rr",
+              "error": ""
+            },
+            {
+              "test_case": 3,
+              "passed": true,
+              "expected": "1:ee/1:ll/1:oo",
+              "actual": "1:ee/1:ll/1:oo",
+              "error": ""
+            }
+          ],
+          "pass_rate": "3/3"
+        }
+      }
+    },
+    "problem_1": {
+      "prompt": "\ndef b91decode(strng):\n\t    \"\"\"[BasE91](http://base91.sourceforge.net/) is a method for encoding binary as ASCII characters. It is more efficient than Base64 and needs 91 characters to represent the encoded data.\n\nThe following ASCII charakters are used:\n\n    'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'\n    '!#$%&()*+,./:;<=>?@[]^_`{|}~\"'\n    \nCreate two functions that encode strings to basE91 string and decodes the other way round. \n\n    b91encode('test') = 'fPNKd'\n    b91decode('fPNKd') = 'test'\n    \n    b91decode('>OwJh>Io0Tv!8PE') = 'Hello World!'\n    b91encode('Hello World!') = '>OwJh>Io0Tv!8PE'\n    \nInput strings are valid.\n    \"\"\"\n",
+      "strategies": {
+        "cot": {
+          "thinking": "STEP 1 - UNDERSTAND: The problem requires implementing a function to decode a string encoded in basE91 format. The input is a basE91 encoded string, and the output is the decoded binary data as a string. The examples show that the function should correctly decode strings back to their original form. STEP 2 - PLAN: The basE91 decoding process involves converting the input string back to a binary value by interpreting it as a base-91 number and then converting that number to bytes. The algorithm involves iterating through the input string, calculating the base-91 value, and then converting that value to bytes. STEP 3 - EDGE CASES: The input string can be empty, in which case the output should be an empty string. The input string can contain all possible basE91 characters. The function should handle all valid basE91 encoded strings correctly. STEP 4 - IMPLEMENT: Implement the function by iterating through the input string, calculating the base-91 value, and converting it to bytes. Use the appropriate character set and handle the decoding process accurately.",
+          "name": "b91decode",
+          "code": "def b91decode(strng):\n    b = 0\n    n = 0\n    out = []\n    for c in strng:\n        if c in 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!#$%&()*+,./:;<=>?@[]^_`{|}~\"':\n            p = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!#$%&()*+,./:;<=>?@[]^_`{|}~\"'.index(c)\n            b += p * (91 ** n)\n            n += 1\n            if b > 0xffffff:\n                out.append(b & 0xff)\n                b >>= 8\n                n -= 1\n    while n > 0:\n        out.append(b & 0xff)\n        b >>= 8\n        n -= 1\n    return ''.join(map(chr, out))",
+          "passed": false,
+          "error": "Some test cases failed",
+          "test_results": [
+            {
+              "test_case": 1,
+              "passed": false,
+              "expected": "Hello World!",
+              "actual": "Ä=Å÷»ÌyJäÁ\u0010\u0000",
+              "error": "Output mismatch"
+            },
+            {
+              "test_case": 2,
+              "passed": false,
+              "expected": "test",
+              "actual": "¤gýv\u0000",
+              "error": "Output mismatch"
+            }
+          ],
+          "pass_rate": "0/2"
+        },
+        "self_planning": {
+          "thinking": "1. **Initialize Variables**: \n   - Create a list of characters used in Base91 encoding.\n   - Initialize two variables: `b` (integer value) and `n` (bit count).\n\n2. **Iterate Through Input String**:\n   - Loop through each character in the input string.\n\n3. **Calculate Base91 Value**:\n   - For each character, find its index in the Base91 character list.\n   - Update `b` by shifting it left by the number of bits in `n` and adding the character's index.\n   - Update `n` by adding 13 (since Base91 uses 13 bits per character).\n\n4. **Extract Bytes**:\n   - While `n` is greater than 8, extract the most significant byte from `b` and append it to the result.\n   - Shift `b` right by 8 bits and decrement `n` by 8.\n\n5. **Handle Remaining Bits**:\n   - If `n` is greater than 0, append the remaining bits in `b` to the result.\n\n6. **Return Decoded Bytes**:\n   - Convert the result list of bytes to a string and return it.",
+          "name": "b91decode",
+          "code": "def b91decode(strng):\n    b = 0\n    n = 0\n    out = []\n    chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!#$%&()*+,./:;<=>?@[]^_`{|}~\"'\n    for c in strng:\n        idx = chars.find(c)\n        if idx == -1:\n            continue\n        b |= idx << n\n        n += 13\n        while n > 7:\n            out.append(b & 255)\n            b >>= 8\n            n -= 8\n    if n > 0:\n        out.append(b)\n    return bytes(out).decode('utf-8')",
+          "passed": false,
+          "error": "Some test cases failed",
+          "test_results": [
+            {
+              "test_case": 1,
+              "passed": false,
+              "expected": "['\"Hello World!\"']",
+              "actual": "",
+              "error": "'utf-8' codec can't decode byte 0xc0 in position 1: invalid start byte"
+            },
+            {
+              "test_case": 2,
+              "passed": false,
+              "expected": "['\"test\"']",
+              "actual": "",
+              "error": "'utf-8' codec can't decode byte 0xe0 in position 1: invalid continuation byte"
+            }
+          ],
+          "pass_rate": "0/2"
+        }
+      }
+    },
+    "problem_2": {
+      "prompt": "\nclass Solution:\n    def minimumTotal(self, triangle: List[List[int]]) -> int:\n            \"\"\"Given a triangle, find the minimum path sum from top to bottom. Each step you may move to adjacent numbers on the row below.\n\nFor example, given the following triangle\n\n\n[\n     [2],\n    [3,4],\n   [6,5,7],\n  [4,1,8,3]\n]\n\n\nThe minimum path sum from top to bottom is 11 (i.e., 2 + 3 + 5 + 1 = 11).\n\nNote:\n\nBonus point if you are able to do this using only O(n) extra space, where n is the total number of rows in the triangle.\n    \"\"\"\n",
+      "strategies": {
+        "self_planning": {
+          "thinking": "1. **Understand the Problem**: We need to find the minimum path sum from the top to the bottom of a triangle. At each step, you can move to an adjacent number on the row below.\n\n2. **Identify the Approach**: Use dynamic programming to solve this problem efficiently. We will work from the bottom of the triangle upwards to minimize the path sum.\n\n3. **Initialize the DP Array**: Create a DP array that will store the minimum path sum for each position in the triangle. Initialize this array with the values of the bottom row of the triangle.\n\n4. **Iterate from Bottom to Top**: Starting from the second-to-last row, iterate upwards through the triangle. For each element in the current row, update the DP array to store the minimum path sum by choosing the minimum of the two adjacent elements from the row below.\n\n5. **Update the DP Array**: For each element at position `(i, j)` in the triangle, update the DP array as follows:\n   - `dp[j] = triangle[i][j] + min(dp[j], dp[j+1])`\n\n6. **Return the Result**: After processing all rows, the minimum path sum will be stored in `dp[0]`. Return this value as the result.\n\n7. **Optimize Space**: To achieve O(n) space complexity, reuse the DP array and update it in place as you iterate through the rows.\n\n8. **Final Output**: The value in `dp[0]` after processing all rows is the minimum path sum from the top to the bottom of the triangle.",
+          "name": "minimumTotal",
+          "code": "def minimumTotal(triangle):\n    if not triangle:\n        return 0\n    dp = triangle[-1]\n    for i in range(len(triangle) - 2, -1, -1):\n        for j in range(len(triangle[i])):\n            dp[j] = triangle[i][j] + min(dp[j], dp[j + 1])\n    return dp[0]",
+          "passed": true,
+          "error": "",
+          "test_results": [
+            {
+              "test_case": 1,
+              "passed": true,
+              "expected": "-10",
+              "actual": "-10",
+              "error": ""
+            },
+            {
+              "test_case": 2,
+              "passed": true,
+              "expected": "11",
+              "actual": "11",
+              "error": ""
+            }
+          ],
+          "pass_rate": "2/2"
+        },
+        "cot": {
+          "thinking": "STEP 1 - UNDERSTAND: The input is a triangle represented as a list of lists, where each row has one more element than the previous. The goal is to find the minimum path sum from top to bottom, moving to adjacent numbers (same index or next index) on the row below. The example shows a path sum of 11 (2 + 3 + 5 + 1). STEP 2 - PLAN: Use dynamic programming to solve this efficiently. Start from the bottom row and work upwards, updating each element to be the sum of itself plus the minimum of the two adjacent elements from the row below. This approach uses O(n) space where n is the number of rows. Time complexity is O(n^2) since we process each element once. STEP 3 - EDGE CASES: Single-row triangle (return the only element). Triangle with negative numbers. Triangle with all identical numbers (path sum is straightforward). STEP 4 - IMPLEMENT: Initialize a DP array with the last row of the triangle. For each row above, update the DP array by adding the current element to the minimum of the two adjacent elements from the row below.",
+          "name": "minimumTotal",
+          "code": "class Solution:\n    def minimumTotal(self, triangle: List[List[int]]) -> int:\n        if not triangle:\n            return 0\n        dp = triangle[-1]\n        for i in range(len(triangle)-2, -1, -1):\n            for j in range(len(triangle[i])):\n                dp[j] = triangle[i][j] + min(dp[j], dp[j+1])\n        return dp[0]",
+          "passed": false,
+          "error": "Some test cases failed",
+          "test_results": [
+            {
+              "test_case": 1,
+              "passed": true,
+              "expected": "-10",
+              "actual": "-10",
+              "error": ""
+            },
+            {
+              "test_case": 2,
+              "passed": false,
+              "expected": "11",
+              "actual": "16",
+              "error": "Output mismatch"
+            }
+          ],
+          "pass_rate": "1/2"
+        }
+      }
+    }
+  },
+  "summary": {
+    "cot": {
+      "total_problems": 3,
+      "fully_passed": 1,
+      "pass_rate": "1/3 (33.3%)"
+    },
+    "self_planning": {
+      "total_problems": 3,
+      "fully_passed": 2,
+      "pass_rate": "2/3 (66.7%)"
+    }
+  }
+}

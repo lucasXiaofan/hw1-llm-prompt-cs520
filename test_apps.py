@@ -2,9 +2,11 @@
 
 import json
 import os
+from datetime import datetime
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from threading import Lock
 from openai import OpenAI
 from dotenv import load_dotenv
-from datetime import datetime
 
 # Import strategies and prompts from test_humaneval
 from test_humaneval import *
@@ -145,7 +147,7 @@ def test_strategy(client, problem, strategy, problem_idx):
 # RUNNER
 # ============================================
 
-def run_tests(model_name, strategies, problems_file, save_file):
+def run_tests(model_name, strategies, problems_file, save_file, max_workers=None):
     """
     Run tests with multiple strategies on competition problems.
 
@@ -154,6 +156,7 @@ def run_tests(model_name, strategies, problems_file, save_file):
         strategies: Dict of {name: strategy_object}
         problems_file: JSON file with problems (array format)
         save_file: Where to save results
+        max_workers: Optional override for concurrent strategy execution
     """
     client = OpenAI(
         base_url="https://openrouter.ai/api/v1",
@@ -176,6 +179,10 @@ def run_tests(model_name, strategies, problems_file, save_file):
         "tests": {}
     }
 
+    total_tasks = len(problems) * len(strategies)
+    resolved_workers = max_workers if max_workers is not None else max(1, min(32, total_tasks))
+    lock = Lock()
+
     for idx, problem in enumerate(problems):
         problem_id = f"problem_{idx}"
         print(f"\nTesting {problem_id}...")
@@ -184,13 +191,28 @@ def run_tests(model_name, strategies, problems_file, save_file):
             "strategies": {}
         }
 
-        for name, strategy in strategies.items():
-            result = test_strategy(client, problem, strategy, idx)
+    def _run_strategy(problem_idx, problem_data, strategy_name, strategy_obj):
+        """Execute a single strategy against a problem; runs inside the thread pool."""
+        strategy_result = test_strategy(client, problem_data, strategy_obj, problem_idx)
+        return problem_idx, strategy_name, strategy_result
+
+    with ThreadPoolExecutor(max_workers=resolved_workers) as executor:
+        futures = [
+            executor.submit(_run_strategy, idx, problem, name, strategy)
+            for idx, problem in enumerate(problems)
+            for name, strategy in strategies.items()
+        ]
+
+        for future in as_completed(futures):
+            idx, name, result = future.result()
+            problem_id = f"problem_{idx}"
             problem_result = {k: v for k, v in result.items() if k != "system_prompt"}
-            if not results["strategies"][name].get("system_prompt"):
-                results["strategies"][name]["system_prompt"] = result.get("system_prompt", "")
-            results["tests"][problem_id]["strategies"][name] = problem_result
-            print(f"  {name}: {'success' if result['passed'] else 'failed'} ({result['pass_rate']})")
+            with lock:
+                if not results["strategies"][name].get("system_prompt") and result.get("system_prompt"):
+                    results["strategies"][name]["system_prompt"] = result.get("system_prompt", "")
+                results["tests"][problem_id]["strategies"][name] = problem_result
+            status = "success" if problem_result.get("passed") else "failed"
+            print(f"  {problem_id} - {name}: {status} ({problem_result.get('pass_rate', '0/0')})")
 
     # Calculate summary statistics
     summary = {}
@@ -234,6 +256,13 @@ def get_timestamp():
 
 if __name__ == "__main__":
     # 1. Initialize strategies (imported from test_humaneval)
+    # cot = CoT(system_prompt=STEPWISE_COT)
+
+    # self_planning = SelfPlanning(
+    #     plan_prompt=MINIMAL_PLAN_PROMPT,
+    #     code_prompt=MINIMAL_CODE_PROMPT
+    # )
+    
     cot = CoT(system_prompt=STEPWISE_COT)
 
     self_planning = SelfPlanning(
@@ -248,9 +277,18 @@ if __name__ == "__main__":
             "cot": cot,
             "self_planning": self_planning
         },
-        problems_file="competition_problems_return_10.json",
-        save_file=f"apps_results_{get_timestamp()}.json"
+        problems_file="hard_apps_problem.json",
+        save_file=f"why_deepseek_apps_results_{get_timestamp()}.json"
     )
-
-
+    
+    model_name_2 = 'google/gemini-2.0-flash-001'
+    run_tests(
+        model_name=model_name_2,
+        strategies={
+            "cot": cot,
+            "self_planning": self_planning
+        },
+        problems_file="hard_apps_problem.json",
+        save_file=f"why_gemini-2_0_apps_results_{get_timestamp()}.json"
+    )
 

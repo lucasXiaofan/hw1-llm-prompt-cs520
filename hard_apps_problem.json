@@ -1,0 +1,921 @@
+[
+  {
+    "prompt": "\ndef b91decode(strng):\n\t    \"\"\"[BasE91](http://base91.sourceforge.net/) is a method for encoding binary as ASCII characters. It is more efficient than Base64 and needs 91 characters to represent the encoded data.\n\nThe following ASCII charakters are used:\n\n    'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'\n    '!#$%&()*+,./:;<=>?@[]^_`{|}~\"'\n    \nCreate two functions that encode strings to basE91 string and decodes the other way round. \n\n    b91encode('test') = 'fPNKd'\n    b91decode('fPNKd') = 'test'\n    \n    b91decode('>OwJh>Io0Tv!8PE') = 'Hello World!'\n    b91encode('Hello World!') = '>OwJh>Io0Tv!8PE'\n    \nInput strings are valid.\n    \"\"\"\n",
+    "canonical_solution": "from math import ceil\ndef b91decode(strng):\n    ret = ''\n    base91_alphabet = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',\n    'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',\n    'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',\n    'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',\n    '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '!', '#', '$',\n    '%', '&', '(', ')', '*', '+', ',', '.', '/', ':', ';', '<', '=',\n    '>', '?', '@', '[', ']', '^', '_', '`', '{', '|', '}', '~', '\"']\n    strng_arr = [strng[i:i+2] for i in range(0, len(strng), 2)]\n    origin_bin = ''\n    for str in strng_arr:\n        num = 0\n        if len(str) == 1:\n            num += base91_alphabet.index(str[0])\n            origin_bin = bin(num)[2:] + origin_bin\n        else:\n            num += base91_alphabet.index(str[0])\n            num += base91_alphabet.index(str[1])*91\n            if num & 8191 > 88:\n                origin_bin = bin(num)[2:].zfill(13) + origin_bin\n            else:\n                origin_bin = bin(num)[2:].zfill(14) + origin_bin\n    origin_bin = origin_bin.zfill(int(ceil(len(origin_bin)/8.0))*8)\n    ret = [origin_bin[i:i+8] for i in range(0, len(origin_bin), 8)]\n    return ''.join(map(lambda x:chr(int(x, 2)), ret))[::-1]\n        \n            \n            \n    \ndef b91encode(strng):\n    base91_alphabet = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',\n    'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',\n    'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',\n    'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',\n    '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '!', '#', '$',\n    '%', '&', '(', ')', '*', '+', ',', '.', '/', ':', ';', '<', '=',\n    '>', '?', '@', '[', ']', '^', '_', '`', '{', '|', '}', '~', '\"']\n    ret = ''\n    strng_bin = map(lambda x:bin(ord(x))[2:].zfill(8), list(strng))\n    strng_bin_r = ''\n    for i in range(len(strng_bin)):\n        strng_bin_r = strng_bin[i] + strng_bin_r\n    strng_bin_r = strng_bin_r[::-1]\n    index = 0\n    while index < len(strng_bin_r):\n        num = int(strng_bin_r[index:index+13][::-1], 2)\n        if num > 88:\n            index += 13\n            ret += base91_alphabet[num%91] + base91_alphabet[num/91]\n        else:\n            num = int(strng_bin_r[index:index+14][::-1], 2)\n            index += 14\n            ret += base91_alphabet[num%91] + base91_alphabet[num/91]\n    ret = ret[0:len(ret)-2]\n    if num > 90:\n        ret += base91_alphabet[num%91] + base91_alphabet[num/91]\n    else:\n        ret += base91_alphabet[num%91]\n    return ret",
+    "inputs": [
+      [
+        "\">OwJh>Io0Tv!8PE\""
+      ],
+      [
+        "\"fPNKd\""
+      ]
+    ],
+    "outputs": [
+      [
+        "\"Hello World!\""
+      ],
+      [
+        "\"test\""
+      ]
+    ],
+    "starter_code": "\ndef b91decode(strng):\n\t",
+    "scope": [
+      [
+        "Function Body",
+        2,
+        27
+      ],
+      [
+        "List Comprehension",
+        11,
+        11
+      ],
+      [
+        "For Loop Body",
+        13,
+        24
+      ],
+      [
+        "If Statement Body",
+        15,
+        24
+      ],
+      [
+        "If Statement Body",
+        21,
+        24
+      ],
+      [
+        "List Comprehension",
+        26,
+        26
+      ],
+      [
+        "Lambda Expression",
+        27,
+        27
+      ],
+      [
+        "Function Body",
+        32,
+        61
+      ],
+      [
+        "Lambda Expression",
+        41,
+        41
+      ],
+      [
+        "For Loop Body",
+        43,
+        44
+      ],
+      [
+        "While Loop Body",
+        47,
+        55
+      ],
+      [
+        "If Statement Body",
+        49,
+        55
+      ],
+      [
+        "If Statement Body",
+        57,
+        60
+      ]
+    ],
+    "difficulty": "interview"
+  },
+  {
+    "prompt": "\nclass Solution:\n    def maxSizeSlices(self, slices: List[int]) -> int:\n            \"\"\"There is a pizza with 3n slices of varying size, you and your friends will take slices of pizza as follows:\n\nYou will pick any pizza slice.\nYour friend Alice\u00a0will pick\u00a0next slice in anti clockwise direction of your pick.\u00a0\nYour friend Bob\u00a0will\u00a0pick\u00a0next slice in clockwise direction of your pick.\nRepeat\u00a0until\u00a0there are no more slices of pizzas.\n\nSizes of Pizza slices is represented by circular array slices in clockwise direction.\nReturn the maximum possible sum of slice sizes which you can have.\n\u00a0\nExample 1:\n\nInput: slices = [1,2,3,4,5,6]\nOutput: 10\nExplanation: Pick pizza slice of size 4, Alice and Bob will pick slices with size 3 and 5 respectively. Then Pick slices with size 6, finally Alice and Bob will pick slice of size 2 and 1 respectively. Total = 4 + 6.\n\nExample 2:\n\nInput: slices = [8,9,8,6,1,1]\nOutput: 16\nOutput: Pick pizza slice of size 8 in each turn. If you pick slice with size 9 your partners will pick slices of size 8.\n\nExample 3:\nInput: slices = [4,1,2,5,8,3,1,9,7]\nOutput: 21\n\nExample 4:\nInput: slices = [3,1,2]\nOutput: 3\n\n\u00a0\nConstraints:\n\n1 <= slices.length <= 500\nslices.length % 3 == 0\n1 <= slices[i] <= 1000\n    \"\"\"\n",
+    "canonical_solution": "class Solution:\n    def maxSizeSlices(self, slices: List[int]) -> int:\n        a,b,n=[slices[0]],[0],len(slices)\n        for i in range(1,n):\n            a.append(max(a[-1],slices[i]))\n            b.append(max(b[-1],slices[i]))\n        for i in range(2,2*n//3,2):\n            aa,bb=[0]*(n-1),[0]*n\n            for j in range(i,n-1): aa[j]=max(aa[j-1],a[j-2]+slices[j])\n            for j in range(i+1,n): bb[j]=max(bb[j-1],b[j-2]+slices[j])\n            a,b=aa,bb\n        return max(a[-1],b[-1])",
+    "inputs": [
+      [
+        [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ]
+      ]
+    ],
+    "outputs": [
+      [
+        10
+      ]
+    ],
+    "starter_code": "\nclass Solution:\n    def maxSizeSlices(self, slices: List[int]) -> int:\n        ",
+    "scope": [
+      [
+        "Class Body",
+        1,
+        12
+      ],
+      [
+        "Function Body",
+        2,
+        12
+      ],
+      [
+        "For Loop Body",
+        4,
+        6
+      ],
+      [
+        "For Loop Body",
+        7,
+        11
+      ],
+      [
+        "For Loop Body",
+        9,
+        9
+      ],
+      [
+        "For Loop Body",
+        10,
+        10
+      ]
+    ],
+    "difficulty": "interview"
+  },
+  {
+    "prompt": "\nclass Solution:\n    def numTimesAllBlue(self, light: List[int]) -> int:\n            \"\"\"There is a room with n bulbs, numbered from 1 to n, arranged in a row from left to right. Initially, all the bulbs are turned off.\nAt moment k (for k from 0 to n - 1), we turn on the light[k] bulb. A bulb change\u00a0color to blue only if it is on and all the previous bulbs (to the left)\u00a0are turned on too.\nReturn the number of moments in\u00a0which all\u00a0turned on bulbs\u00a0are blue.\n\u00a0\nExample 1:\n\nInput: light = [2,1,3,5,4]\nOutput: 3\nExplanation: All bulbs turned on, are blue at the moment 1, 2 and 4.\n\nExample 2:\nInput: light = [3,2,4,1,5]\nOutput: 2\nExplanation: All bulbs turned on, are blue at the moment 3, and 4 (index-0).\n\nExample 3:\nInput: light = [4,1,2,3]\nOutput: 1\nExplanation: All bulbs turned on, are blue at the moment 3 (index-0).\nBulb 4th changes to blue at the moment 3.\n\nExample 4:\nInput: light = [2,1,4,3,6,5]\nOutput: 3\n\nExample 5:\nInput: light = [1,2,3,4,5,6]\nOutput: 6\n\n\u00a0\nConstraints:\n\nn ==\u00a0light.length\n1 <= n <= 5 * 10^4\nlight is a permutation of\u00a0\u00a0[1, 2, ..., n]\n    \"\"\"\n",
+    "canonical_solution": "class Solution:\n    def numTimesAllBlue(self, light: List[int]) -> int:\n        right = 0\n        ans = 0\n        for i in range(len(light)):\n            if (light[i] > right):\n                right = light[i]\n            \n            if (i + 1 == right):\n                ans += 1\n                \n        return ans",
+    "inputs": [
+      [
+        [
+          2,
+          1,
+          3,
+          5,
+          4
+        ]
+      ]
+    ],
+    "outputs": [
+      [
+        3
+      ]
+    ],
+    "starter_code": "\nclass Solution:\n    def numTimesAllBlue(self, light: List[int]) -> int:\n        ",
+    "scope": [
+      [
+        "Class Body",
+        1,
+        12
+      ],
+      [
+        "Function Body",
+        2,
+        12
+      ],
+      [
+        "For Loop Body",
+        5,
+        10
+      ],
+      [
+        "If Statement Body",
+        6,
+        7
+      ],
+      [
+        "If Statement Body",
+        9,
+        10
+      ]
+    ],
+    "difficulty": "interview"
+  },
+  {
+    "prompt": "\nclass Solution:\n    def unhappyFriends(self, n: int, preferences: List[List[int]], pairs: List[List[int]]) -> int:\n            \"\"\"You are given a list of\u00a0preferences\u00a0for\u00a0n\u00a0friends, where n is always even.\nFor each person i,\u00a0preferences[i]\u00a0contains\u00a0a list of friends\u00a0sorted in the order of preference. In other words, a friend earlier in the list is more preferred than a friend later in the list.\u00a0Friends in\u00a0each list are\u00a0denoted by integers from 0 to n-1.\nAll the friends are divided into pairs.\u00a0The pairings are\u00a0given in a list\u00a0pairs,\u00a0where pairs[i] = [xi, yi] denotes xi\u00a0is paired with yi and yi is paired with xi.\nHowever, this pairing may cause some of the friends to be unhappy.\u00a0A friend x\u00a0is unhappy if x\u00a0is paired with y\u00a0and there exists a friend u\u00a0who\u00a0is paired with v\u00a0but:\n\nx\u00a0prefers u\u00a0over y,\u00a0and\nu\u00a0prefers x\u00a0over v.\n\nReturn the number of unhappy friends.\n\u00a0\nExample 1:\nInput: n = 4, preferences = [[1, 2, 3], [3, 2, 0], [3, 1, 0], [1, 2, 0]], pairs = [[0, 1], [2, 3]]\nOutput: 2\nExplanation:\nFriend 1 is unhappy because:\n- 1 is paired with 0 but prefers 3 over 0, and\n- 3 prefers 1 over 2.\nFriend 3 is unhappy because:\n- 3 is paired with 2 but prefers 1 over 2, and\n- 1 prefers 3 over 0.\nFriends 0 and 2 are happy.\n\nExample 2:\nInput: n = 2, preferences = [[1], [0]], pairs = [[1, 0]]\nOutput: 0\nExplanation: Both friends 0 and 1 are happy.\n\nExample 3:\nInput: n = 4, preferences = [[1, 3, 2], [2, 3, 0], [1, 3, 0], [0, 2, 1]], pairs = [[1, 3], [0, 2]]\nOutput: 4\n\n\u00a0\nConstraints:\n\n2 <= n <= 500\nn\u00a0is even.\npreferences.length\u00a0== n\npreferences[i].length\u00a0== n - 1\n0 <= preferences[i][j] <= n - 1\npreferences[i]\u00a0does not contain i.\nAll values in\u00a0preferences[i]\u00a0are unique.\npairs.length\u00a0== n/2\npairs[i].length\u00a0== 2\nxi != yi\n0 <= xi, yi\u00a0<= n - 1\nEach person is contained in exactly one pair.\n    \"\"\"\n",
+    "canonical_solution": "class Solution:\n    def preferences_to_scores(self, preferences):\n        scores = {}\n        for u, up in enumerate(preferences):\n            for s, v in enumerate(up):\n                scores[(u, v)] = s\n        return scores\n    \n    def unhappy_friends(self, scores, a, b):\n        ret = set()\n        for ai, aa in enumerate(a):\n            af = a[1 - ai]\n            for bi, bb in enumerate(b):\n                bf = b[1 - bi]\n                if scores[(aa, bb)] < scores[(aa, af)] and scores[(bb, aa)] < scores[(bb, bf)]:\n                    ret.add(aa)\n                    ret.add(bb)\n        return ret\n    \n    def unhappyFriends(self, n: int, preferences: List[List[int]], pairs: List[List[int]]) -> int:\n        scores = self.preferences_to_scores(preferences)\n        ret = set()\n        for i, a in enumerate(pairs):\n            for j in range(i):\n                b = pairs[j]\n                ret |= self.unhappy_friends(scores, a, b)\n        return len(ret)\n",
+    "inputs": [
+      [
+        4,
+        [
+          [
+            1,
+            2,
+            3
+          ],
+          [
+            3,
+            2,
+            0
+          ],
+          [
+            3,
+            1,
+            0
+          ],
+          [
+            1,
+            2,
+            0
+          ],
+          [],
+          []
+        ],
+        [
+          [
+            0,
+            1
+          ],
+          [
+            2,
+            3
+          ],
+          [],
+          []
+        ]
+      ]
+    ],
+    "outputs": [
+      [
+        2
+      ]
+    ],
+    "starter_code": "\nclass Solution:\n    def unhappyFriends(self, n: int, preferences: List[List[int]], pairs: List[List[int]]) -> int:\n        ",
+    "scope": [
+      [
+        "Class Body",
+        1,
+        27
+      ],
+      [
+        "Function Body",
+        2,
+        7
+      ],
+      [
+        "For Loop Body",
+        4,
+        6
+      ],
+      [
+        "For Loop Body",
+        5,
+        6
+      ],
+      [
+        "Function Body",
+        9,
+        18
+      ],
+      [
+        "For Loop Body",
+        11,
+        17
+      ],
+      [
+        "For Loop Body",
+        13,
+        17
+      ],
+      [
+        "If Statement Body",
+        15,
+        17
+      ],
+      [
+        "Function Body",
+        20,
+        27
+      ],
+      [
+        "For Loop Body",
+        23,
+        26
+      ],
+      [
+        "For Loop Body",
+        24,
+        26
+      ]
+    ],
+    "difficulty": "interview"
+  },
+  {
+    "prompt": "\nclass Solution:\n    def minSwaps(self, grid: List[List[int]]) -> int:\n            \"\"\"Given an n\u00a0x n\u00a0binary grid, in one step you can choose two adjacent rows of the grid and swap them.\nA grid is said to be valid if all the cells above the main diagonal are zeros.\nReturn the minimum number of steps needed to make the grid valid, or -1 if the grid cannot be valid.\nThe main diagonal of a grid is the diagonal that starts at cell (1, 1) and ends at cell (n, n).\n\u00a0\nExample 1:\n\nInput: grid = [[0,0,1],[1,1,0],[1,0,0]]\nOutput: 3\n\nExample 2:\n\nInput: grid = [[0,1,1,0],[0,1,1,0],[0,1,1,0],[0,1,1,0]]\nOutput: -1\nExplanation: All rows are similar, swaps have no effect on the grid.\n\nExample 3:\n\nInput: grid = [[1,0,0],[1,1,0],[1,1,1]]\nOutput: 0\n\n\u00a0\nConstraints:\n\nn == grid.length\nn == grid[i].length\n1 <= n\u00a0<= 200\ngrid[i][j] is 0 or 1\n    \"\"\"\n",
+    "canonical_solution": "class Solution:\n    def minSwaps(self, grid: List[List[int]]) -> int:\n        start=1\n        swap=0\n        n=len(grid)\n        zeros_ingrid=n-1\n        while zeros_ingrid>0:\n            swapped_grid=False\n            for i in range(len(grid)):\n                if sum(grid[i][start:])==0:\n                    swap+=i\n                    grid.remove(grid[i])\n                    swapped_grid=True\n                    zeros_ingrid-=1\n                    start+=1\n                    break\n            if not swapped_grid:\n                return -1\n        return swap\n                \n                    \n                \n                \n",
+    "inputs": [
+      [
+        [
+          [
+            0,
+            0,
+            1
+          ],
+          [
+            1,
+            1,
+            0
+          ],
+          [
+            1,
+            0,
+            0
+          ],
+          [],
+          []
+        ]
+      ]
+    ],
+    "outputs": [
+      [
+        3
+      ]
+    ],
+    "starter_code": "\nclass Solution:\n    def minSwaps(self, grid: List[List[int]]) -> int:\n        ",
+    "scope": [
+      [
+        "Class Body",
+        1,
+        19
+      ],
+      [
+        "Function Body",
+        2,
+        19
+      ],
+      [
+        "While Loop Body",
+        7,
+        18
+      ],
+      [
+        "For Loop Body",
+        9,
+        16
+      ],
+      [
+        "If Statement Body",
+        10,
+        16
+      ],
+      [
+        "If Statement Body",
+        17,
+        18
+      ]
+    ],
+    "difficulty": "interview"
+  },
+  {
+    "prompt": "\ndef mix(s1, s2):\n\t    \"\"\"Given two strings s1 and s2, we want to visualize how different the two strings are.\nWe will only take into account the *lowercase* letters (a to z).\nFirst let us count the frequency of each *lowercase* letters in s1 and s2.\n\n`s1 = \"A aaaa bb c\"`\n\n`s2 = \"& aaa bbb c d\"`\n\n`s1 has 4 'a', 2 'b', 1 'c'`\n\n`s2 has 3 'a', 3 'b', 1 'c', 1 'd'`\n\nSo the maximum for 'a' in s1 and s2 is 4 from s1; the maximum for 'b' is 3 from s2.\nIn the following we will not consider letters when the maximum of their occurrences\nis less than or equal to 1.\n\nWe can resume the differences between s1 and s2 in the following string:\n`\"1:aaaa/2:bbb\"`\nwhere `1` in `1:aaaa` stands for string s1 and `aaaa` because the maximum for `a` is 4.\nIn the same manner `2:bbb` stands for string s2 and `bbb` because the maximum for `b` is 3.\n\nThe task is to produce a string in which each *lowercase* letters of s1 or s2 appears as many times as\nits maximum if this maximum is *strictly greater than 1*; these letters will be prefixed by the \nnumber of the string where they appear with their maximum value and `:`. \nIf the maximum is in s1 as well as in s2 the prefix is `=:`.\n\nIn the result, substrings (a substring is for example 2:nnnnn or 1:hhh; it contains the prefix) will be in decreasing order of their length and when they have the same length sorted in ascending lexicographic order (letters and digits - more precisely sorted by codepoint); the different groups will be separated by '/'. See examples and \"Example Tests\".\n\nHopefully other examples can make this clearer.\n\n```\ns1 = \"my&friend&Paul has heavy hats! &\"\ns2 = \"my friend John has many many friends &\"\nmix(s1, s2) --> \"2:nnnnn/1:aaaa/1:hhh/2:mmm/2:yyy/2:dd/2:ff/2:ii/2:rr/=:ee/=:ss\"\n\ns1 = \"mmmmm m nnnnn y&friend&Paul has heavy hats! &\"\ns2 = \"my frie n d Joh n has ma n y ma n y frie n ds n&\"\nmix(s1, s2) --> \"1:mmmmmm/=:nnnnnn/1:aaaa/1:hhh/2:yyy/2:dd/2:ff/2:ii/2:rr/=:ee/=:ss\"\n\ns1=\"Are the kids at home? aaaaa fffff\"\ns2=\"Yes they are here! aaaaa fffff\"\nmix(s1, s2) --> \"=:aaaaaa/2:eeeee/=:fffff/1:tt/2:rr/=:hh\"\n```\n# Note for Swift, R, PowerShell\nThe prefix `=:` is replaced by `E:`\n``` \ns1 = \"mmmmm m nnnnn y&friend&Paul has heavy hats! &\"\ns2 = \"my frie n d Joh n has ma n y ma n y frie n ds n&\"\nmix(s1, s2) --> \"1:mmmmmm/E:nnnnnn/1:aaaa/1:hhh/2:yyy/2:dd/2:ff/2:ii/2:rr/E:ee/E:ss\"\n```\n    \"\"\"\n",
+    "canonical_solution": "\ndef mix(s1, s2):\n    hist = {}\n    for ch in \"abcdefghijklmnopqrstuvwxyz\":\n        val1, val2 = s1.count(ch), s2.count(ch)\n        if max(val1, val2) > 1:\n            which = \"1\" if val1 > val2 else \"2\" if val2 > val1 else \"=\"\n            hist[ch] = (-max(val1, val2), which + \":\" + ch * max(val1, val2))\n    return \"/\".join(hist[ch][1] for ch in sorted(hist, key=lambda x: hist[x]))\n",
+    "inputs": [
+      [
+        "\"looping is fun but dangerous\"",
+        "\"less dangerous than coding\""
+      ],
+      [
+        "\"Are they here\"",
+        "\"yes, they are here\""
+      ],
+      [
+        "\"Lords of the Fallen\"",
+        "\"gamekult\""
+      ]
+    ],
+    "outputs": [
+      [
+        "\"1:ooo/1:uuu/2:sss/=:nnn/1:ii/2:aa/2:dd/2:ee/=:gg\""
+      ],
+      [
+        "\"2:eeeee/2:yy/=:hh/=:rr\""
+      ],
+      [
+        "\"1:ee/1:ll/1:oo\""
+      ]
+    ],
+    "starter_code": "\ndef mix(s1, s2):\n\t",
+    "scope": [
+      [
+        "Function Body",
+        2,
+        9
+      ],
+      [
+        "For Loop Body",
+        4,
+        8
+      ],
+      [
+        "If Statement Body",
+        6,
+        8
+      ],
+      [
+        "Generator Expression",
+        9,
+        9
+      ],
+      [
+        "Lambda Expression",
+        9,
+        9
+      ]
+    ],
+    "difficulty": "interview"
+  },
+  {
+    "prompt": "\nclass Solution:\n    def containsCycle(self, grid: List[List[str]]) -> bool:\n            \"\"\"Given a 2D array of characters\u00a0grid\u00a0of size m x n, you need to find if there exists any cycle consisting of the same value\u00a0in\u00a0grid.\nA cycle is a path of length 4\u00a0or more\u00a0in the grid that starts and ends at the same cell. From a given cell, you can move to one of the cells adjacent to it - in one of the four directions (up, down, left, or right), if it has the same value of the current cell.\nAlso, you cannot move to the cell that you visited in your last move. For example, the cycle\u00a0(1, 1) -> (1, 2) -> (1, 1)\u00a0is invalid because from\u00a0(1, 2)\u00a0we visited\u00a0(1, 1)\u00a0which was the last visited cell.\nReturn\u00a0true\u00a0if any cycle of the same value exists in\u00a0grid, otherwise, return\u00a0false.\n\u00a0\nExample 1:\n\nInput: grid = [[\"a\",\"a\",\"a\",\"a\"],[\"a\",\"b\",\"b\",\"a\"],[\"a\",\"b\",\"b\",\"a\"],[\"a\",\"a\",\"a\",\"a\"]]\nOutput: true\nExplanation: There are two valid cycles shown in different colors in the image below:\n\n\nExample 2:\n\nInput: grid = [[\"c\",\"c\",\"c\",\"a\"],[\"c\",\"d\",\"c\",\"c\"],[\"c\",\"c\",\"e\",\"c\"],[\"f\",\"c\",\"c\",\"c\"]]\nOutput: true\nExplanation: There is only one valid cycle highlighted in the image below:\n\n\nExample 3:\n\nInput: grid = [[\"a\",\"b\",\"b\"],[\"b\",\"z\",\"b\"],[\"b\",\"b\",\"a\"]]\nOutput: false\n\n\u00a0\nConstraints:\n\nm == grid.length\nn == grid[i].length\n1 <= m <= 500\n1 <= n <= 500\ngrid\u00a0consists only of lowercase\u00a0English letters.\n    \"\"\"\n",
+    "canonical_solution": "class Solution:\n    def containsCycle(self, grid: List[List[str]]) -> bool:\n        n = len(grid)\n        m = len(grid[0])\n        \n        F = [i for i in range(m * n)]\n        def find(x):\n            if x == F[x]:\n                return x\n            else:\n                F[x] = find(F[x])\n                return F[x]\n            \n        for i in range(n):\n            for j in range(m):\n                if i > 0 and grid[i-1][j] == grid[i][j]:\n                    f1 = find((i-1)*m+j)\n                    f2 = find((i)*m+j)\n                    if f1 == f2:\n                        return True\n                    F[f1] = f2\n                if j > 0 and grid[i][j-1] == grid[i][j]:\n                    f1 = find((i)*m+j-1)\n                    f2 = find((i)*m+j)\n                    if f1 == f2:\n                        return True\n                    F[f1] = f2\n        return False\n",
+    "inputs": [
+      [
+        [
+          [
+            "\"a\"",
+            "\"a\"",
+            "\"a\"",
+            "\"a\""
+          ],
+          [
+            "\"a\"",
+            "\"b\"",
+            "\"b\"",
+            "\"a\""
+          ],
+          [
+            "\"a\"",
+            "\"b\"",
+            "\"b\"",
+            "\"a\""
+          ],
+          [
+            "\"a\"",
+            "\"a\"",
+            "\"a\"",
+            "\"a\""
+          ],
+          [],
+          []
+        ]
+      ]
+    ],
+    "outputs": [
+      [
+        true
+      ]
+    ],
+    "starter_code": "\nclass Solution:\n    def containsCycle(self, grid: List[List[str]]) -> bool:\n        ",
+    "scope": [
+      [
+        "Class Body",
+        1,
+        28
+      ],
+      [
+        "Function Body",
+        2,
+        28
+      ],
+      [
+        "List Comprehension",
+        6,
+        6
+      ],
+      [
+        "Function Body",
+        7,
+        12
+      ],
+      [
+        "If Statement Body",
+        8,
+        12
+      ],
+      [
+        "For Loop Body",
+        14,
+        27
+      ],
+      [
+        "For Loop Body",
+        15,
+        27
+      ],
+      [
+        "If Statement Body",
+        16,
+        21
+      ],
+      [
+        "If Statement Body",
+        19,
+        20
+      ],
+      [
+        "If Statement Body",
+        22,
+        27
+      ],
+      [
+        "If Statement Body",
+        25,
+        26
+      ]
+    ],
+    "difficulty": "interview"
+  },
+  {
+    "prompt": "\nclass Solution:\n    def numPermsDISequence(self, S: str) -> int:\n            \"\"\"We are given S, a length n string of characters from the set {'D', 'I'}. (These letters stand for \"decreasing\" and \"increasing\".)\nA\u00a0valid permutation\u00a0is a permutation P[0], P[1], ..., P[n] of integers\u00a0{0, 1, ..., n}, such that for all i:\n\nIf S[i] == 'D', then P[i] > P[i+1], and;\nIf S[i] == 'I', then P[i] < P[i+1].\n\nHow many valid permutations are there?\u00a0 Since the answer may be large, return your answer modulo 10^9 + 7.\n\u00a0\nExample 1:\nInput: \"DID\"\nOutput: 5\nExplanation: \nThe 5 valid permutations of (0, 1, 2, 3) are:\n(1, 0, 3, 2)\n(2, 0, 3, 1)\n(2, 1, 3, 0)\n(3, 0, 2, 1)\n(3, 1, 2, 0)\n\n\u00a0\nNote:\n\n1 <= S.length <= 200\nS consists only of characters from the set {'D', 'I'}.\n    \"\"\"\n",
+    "canonical_solution": "class Solution:\n    def numPermsDISequence(self, S):\n        dp = [1] * (len(S) + 1)\n        for a, b in zip('I' + S, S):\n            dp = list(itertools.accumulate(dp[:-1] if a == b else dp[-1:0:-1]))\n        return dp[0] % (10**9 + 7)\n",
+    "inputs": [
+      [
+        "\"DID\""
+      ]
+    ],
+    "outputs": [
+      [
+        5
+      ]
+    ],
+    "starter_code": "\nclass Solution:\n    def numPermsDISequence(self, S: str) -> int:\n        ",
+    "scope": [
+      [
+        "Class Body",
+        1,
+        6
+      ],
+      [
+        "Function Body",
+        2,
+        6
+      ],
+      [
+        "For Loop Body",
+        4,
+        5
+      ]
+    ],
+    "difficulty": "interview"
+  },
+  {
+    "prompt": "\nclass Solution:\n    def maxValueAfterReverse(self, nums: List[int]) -> int:\n            \"\"\"You are given an integer array nums. The value of this array is defined as the sum of |nums[i]-nums[i+1]|\u00a0for all\u00a00 <= i < nums.length-1.\nYou are allowed to select any subarray of the given array and reverse it. You can perform this operation only once.\nFind maximum possible value of the final array.\n\u00a0\nExample 1:\nInput: nums = [2,3,1,5,4]\nOutput: 10\nExplanation: By reversing the subarray [3,1,5] the array becomes [2,5,1,3,4] whose value is 10.\n\nExample 2:\nInput: nums = [2,4,9,24,2,1,10]\nOutput: 68\n\n\u00a0\nConstraints:\n\n1 <= nums.length <= 3*10^4\n-10^5 <= nums[i] <= 10^5\n    \"\"\"\n",
+    "canonical_solution": "class Solution:\n    def maxValueAfterReverse(self, nums: List[int]) -> int:\n        n = len(nums)\n        base = sum([abs(nums[i] - nums[i+1]) for i in range(n - 1)])\n        if (n <= 2):\n            return base\n        \n        #best = base\n        #for i in range(n-1):\n        #    for j in range(i+1, n):\n        #        guess = switch(nums, i, j, base)\n        #        if guess > best:\n        #            best = guess\n        \n        inds = sorted(list(range(n)), key=lambda x: nums[x])\n        return base + max(options(inds, nums))\n        \n    \ndef switch(nums, i, j, base=0):\n    i_inc = ((abs(nums[j] - nums[i-1]) - abs(nums[i] - nums[i-1])) if (i > 0) else 0)\n    j_inc = ((abs(nums[j+1] - nums[i]) - abs(nums[j+1] - nums[j])) if (j < len(nums) - 1) else 0)\n    return base + i_inc + j_inc\n    \n    \n\ndef options(inds, nums):\n    a,b = findRange(inds)\n    d,c = findRange(inds[::-1])\n    yield 0\n    yield 2 * (nums[c] - nums[b])\n\n    i = max(a, b)\n    j = max(c, d)\n    n = len(nums)\n    yield switch(nums, i, n-1)\n    yield switch(nums, j, n-1)\n    \n    yield switch(nums, 0, i-1)\n    yield switch(nums, 0, j-1)\n    \n    \n    \n    \n\ndef findRange(inds):\n    seen = set()\n    for i, idx in enumerate(inds):\n        if (idx + 1) in seen or (idx - 1) in seen:\n            return (idx + 1, idx) if (idx + 1) in seen else (idx-1, idx)\n        seen.add(idx)\n        \n",
+    "inputs": [
+      [
+        [
+          2,
+          3,
+          1,
+          5,
+          4
+        ]
+      ]
+    ],
+    "outputs": [
+      [
+        10
+      ]
+    ],
+    "starter_code": "\nclass Solution:\n    def maxValueAfterReverse(self, nums: List[int]) -> int:\n        ",
+    "scope": [
+      [
+        "Class Body",
+        1,
+        16
+      ],
+      [
+        "Function Body",
+        2,
+        16
+      ],
+      [
+        "List Comprehension",
+        4,
+        4
+      ],
+      [
+        "If Statement Body",
+        5,
+        6
+      ],
+      [
+        "Lambda Expression",
+        15,
+        15
+      ],
+      [
+        "Function Body",
+        19,
+        22
+      ],
+      [
+        "Function Body",
+        26,
+        39
+      ],
+      [
+        "Function Body",
+        45,
+        50
+      ],
+      [
+        "For Loop Body",
+        47,
+        50
+      ],
+      [
+        "If Statement Body",
+        48,
+        49
+      ]
+    ],
+    "difficulty": "interview"
+  },
+  {
+    "prompt": "\nclass Solution:\n    def leastOpsExpressTarget(self, x: int, target: int) -> int:\n            \"\"\"Given a single positive integer x, we will write an expression of the form x (op1) x (op2) x (op3) x ...\u00a0where each operator op1, op2, etc. is either addition, subtraction, multiplication, or division (+, -, *, or /).\u00a0 For example, with x = 3, we might write 3 * 3 / 3 + 3 - 3\u00a0which is a value of 3.\nWhen writing such an expression, we adhere to the following conventions:\n\nThe division operator (/) returns rational numbers.\nThere are no parentheses placed anywhere.\nWe use the usual order of operations: multiplication and division happens before addition and subtraction.\nIt's not allowed to use the unary negation\u00a0operator (-).\u00a0 For example, \"x\u00a0- x\"\u00a0is a valid expression as it only uses subtraction, but \"-x +\u00a0x\" is not because it uses negation.\n\nWe would like to write an expression with the least number of operators such that the expression equals the given target.\u00a0 Return the least number of operators used.\n\u00a0\n\nExample 1:\nInput: x = 3, target = 19\nOutput: 5\nExplanation: 3 * 3 + 3 * 3 + 3 / 3.  The expression contains 5 operations.\n\nExample 2:\n\nInput: x = 5, target = 501\nOutput: 8\nExplanation: 5 * 5 * 5 * 5 - 5 * 5 * 5 + 5 / 5.  The expression contains 8 operations.\n\n\nExample 3:\nInput: x = 100, target = 100000000\nOutput: 3\nExplanation: 100 * 100 * 100 * 100.  The expression contains 3 operations.\n\u00a0\n\n\n\nNote:\n\n2 <= x <= 100\n1 <= target <= 2 * 10^8\n    \"\"\"\n",
+    "canonical_solution": "class Solution:\n    def leastOpsExpressTarget(self, x: int, target: int) -> int:\n        def dp(i, j):\n            if i==0: return 2*j\n            # if j==0: return 0\n            if j==1: return 2\n            if (i, j) in memo: return memo[(i, j)]\n            base = x**i\n            q, r = divmod(j, base)\n            if r==0: return q*i\n            memo[(i, j)]=min(q*i+dp(i-1, r), (q+1)*i+dp(i-1, base-r))\n            return memo[(i, j)]\n        \n        memo = {}\n        return dp(ceil(log(target, x)), target)-1",
+    "inputs": [
+      [
+        3,
+        19
+      ]
+    ],
+    "outputs": [
+      [
+        5
+      ]
+    ],
+    "starter_code": "\nclass Solution:\n    def leastOpsExpressTarget(self, x: int, target: int) -> int:\n        ",
+    "scope": [
+      [
+        "Class Body",
+        1,
+        15
+      ],
+      [
+        "Function Body",
+        2,
+        15
+      ],
+      [
+        "Function Body",
+        3,
+        12
+      ],
+      [
+        "If Statement Body",
+        4,
+        4
+      ],
+      [
+        "If Statement Body",
+        6,
+        6
+      ],
+      [
+        "If Statement Body",
+        7,
+        7
+      ],
+      [
+        "If Statement Body",
+        10,
+        10
+      ]
+    ],
+    "difficulty": "interview"
+  },
+  {
+    "prompt": "\nclass Solution:\n    def longestCommonSubsequence(self, text1: str, text2: str) -> int:\n            \"\"\"Given two strings text1 and text2, return the length of their longest common subsequence.\nA subsequence of a string is a new string generated from the original string with some characters(can be none) deleted without changing the relative order of the remaining characters. (eg, \"ace\" is a subsequence of \"abcde\" while \"aec\" is not).\u00a0A common subsequence\u00a0of two strings is a subsequence that is common to both strings.\n\u00a0\nIf there is no common subsequence, return 0.\n\u00a0\nExample 1:\nInput: text1 = \"abcde\", text2 = \"ace\" \nOutput: 3  \nExplanation: The longest common subsequence is \"ace\" and its length is 3.\n\nExample 2:\nInput: text1 = \"abc\", text2 = \"abc\"\nOutput: 3\nExplanation: The longest common subsequence is \"abc\" and its length is 3.\n\nExample 3:\nInput: text1 = \"abc\", text2 = \"def\"\nOutput: 0\nExplanation: There is no such common subsequence, so the result is 0.\n\n\u00a0\nConstraints:\n\n1 <= text1.length <= 1000\n1 <= text2.length <= 1000\nThe input strings consist of lowercase English characters only.\n    \"\"\"\n",
+    "canonical_solution": "class Solution:\n    def longestCommonSubsequence(self, a: str, b: str) -> int:\n        last, current = [0] * (len(b) + 1), [0] * (len(b) + 1)\n        \n        for i in range(len(a) - 1, -1, -1):\n            for j in range(len(b) - 1, -1, -1):\n                if a[i] == b[j]:\n                    current[j] = 1 + last[j + 1]\n                else:\n                    current[j] = max(last[j], current[j + 1])\n            last = current\n            current = [0] * (len(b) + 1)\n        return last[0]",
+    "inputs": [
+      [
+        "\"abcde\"",
+        "\"ace\""
+      ]
+    ],
+    "outputs": [
+      [
+        3
+      ]
+    ],
+    "starter_code": "\nclass Solution:\n    def longestCommonSubsequence(self, text1: str, text2: str) -> int:\n        ",
+    "scope": [
+      [
+        "Class Body",
+        1,
+        13
+      ],
+      [
+        "Function Body",
+        2,
+        13
+      ],
+      [
+        "For Loop Body",
+        5,
+        12
+      ],
+      [
+        "For Loop Body",
+        6,
+        10
+      ],
+      [
+        "If Statement Body",
+        7,
+        10
+      ]
+    ],
+    "difficulty": "interview"
+  },
+  {
+    "prompt": "\ndef exchange_sort(sequence):\n\t    \"\"\"# Task\n Sorting is one of the most basic computational devices used in Computer Science. \n \n Given a sequence (length \u2264 1000) of 3 different key values (7, 8, 9), your task is to find the minimum number of exchange operations necessary to make the sequence sorted. \n\n One operation is the switching of 2 key values in the sequence.\n\n# Example\n\n For `sequence = [7, 7, 8, 8, 9, 9]`, the result should be `0`.\n \n It's already a sorted sequence.\n\n For `sequence = [9, 7, 8, 8, 9, 7]`, the result should be `1`.\n \n We can switching `sequence[0]` and `sequence[5]`.\n \n For `sequence = [8, 8, 7, 9, 9, 9, 8, 9, 7]`, the result should be `4`.\n \n We can:\n```\n [8, 8, 7, 9, 9, 9, 8, 9, 7] \n switching sequence[0] and sequence[3]\n --> [9, 8, 7, 8, 9, 9, 8, 9, 7]\n switching sequence[0] and sequence[8]\n --> [7, 8, 7, 8, 9, 9, 8, 9, 9]\n switching sequence[1] and sequence[2]\n --> [7, 7, 8, 8, 9, 9, 8, 9, 9]\n switching sequence[5] and sequence[7]\n --> [7, 7, 8, 8, 8, 9, 9, 9, 9] \n```\nSo `4` is the minimum number of operations for the sequence to become sorted.\n\n# Input/Output\n\n\n - `[input]` integer array `sequence`\n\n  The Sequence.\n\n\n - `[output]` an integer\n\n  the minimum number of operations.\n    \"\"\"\n",
+    "canonical_solution": "from collections import Counter\n\ndef exchange_sort(sequence):\n    \"\"\"Greedy algorithm based on permutation cycle decomposition:\n    1. Search for transposition placing TWO elements correctly.\n    2. Search iteratively for transposition placing ONE elements correctly.\"\"\"\n    swaps, cnt = 0, Counter()\n    for a, b in zip(sequence, sorted(sequence)):\n        if cnt[b,a] > 0:\n            cnt[b,a] -= 1\n            swaps += 1\n        elif a != b:\n            cnt[a,b] += 1\n    # Special case: as there are only three keys at most,\n    # all remaining cycles will be 3-length cycles that\n    # need 2 transpositions to place 3 elements correctly.\n    return swaps + sum(cnt.values()) // 3 * 2",
+    "inputs": [
+      [
+        [
+          9,
+          9,
+          7,
+          7,
+          8,
+          8
+        ]
+      ],
+      [
+        [
+          8,
+          8,
+          7,
+          8
+        ]
+      ],
+      [
+        [
+          9,
+          7,
+          9
+        ]
+      ]
+    ],
+    "outputs": [
+      [
+        4
+      ],
+      [
+        1
+      ],
+      [
+        1
+      ]
+    ],
+    "starter_code": "\ndef exchange_sort(sequence):\n\t",
+    "scope": [
+      [
+        "Function Body",
+        3,
+        17
+      ],
+      [
+        "For Loop Body",
+        8,
+        13
+      ],
+      [
+        "If Statement Body",
+        9,
+        13
+      ],
+      [
+        "If Statement Body",
+        12,
+        13
+      ]
+    ],
+    "difficulty": "interview"
+  },
+  {
+    "prompt": "\nclass Solution:\n    def minimumTotal(self, triangle: List[List[int]]) -> int:\n            \"\"\"Given a triangle, find the minimum path sum from top to bottom. Each step you may move to adjacent numbers on the row below.\n\nFor example, given the following triangle\n\n\n[\n     [2],\n    [3,4],\n   [6,5,7],\n  [4,1,8,3]\n]\n\n\nThe minimum path sum from top to bottom is 11 (i.e., 2 + 3 + 5 + 1 = 11).\n\nNote:\n\nBonus point if you are able to do this using only O(n) extra space, where n is the total number of rows in the triangle.\n    \"\"\"\n",
+    "canonical_solution": "class Solution:\n     def minimumTotal(self, triangle):\n         \"\"\"\n         :type triangle: List[List[int]]\n         :rtype: int\n         \"\"\"\n         length = len(triangle)\n         for i in range(length - 1, 0, -1):\n             for j in range(1, len(triangle[i])):\n                 if triangle[i][j] < triangle[i][j-1]:\n                     triangle[i-1][j-1] += triangle[i][j]\n                 else:\n                     triangle[i-1][j-1] += triangle[i][j - 1]\n         return triangle[0][0]",
+    "inputs": [
+      [
+        [
+          [
+            -10
+          ]
+        ]
+      ],
+      [
+        [
+          [
+            2
+          ],
+          [
+            3,
+            4
+          ],
+          [
+            6,
+            5,
+            7
+          ],
+          [
+            4,
+            1,
+            8,
+            3
+          ]
+        ]
+      ]
+    ],
+    "outputs": [
+      [
+        -10
+      ],
+      [
+        11
+      ]
+    ],
+    "starter_code": "\nclass Solution:\n    def minimumTotal(self, triangle: List[List[int]]) -> int:\n        ",
+    "scope": [
+      [
+        "Class Body",
+        1,
+        14
+      ],
+      [
+        "Function Body",
+        2,
+        14
+      ],
+      [
+        "For Loop Body",
+        8,
+        13
+      ],
+      [
+        "For Loop Body",
+        9,
+        13
+      ],
+      [
+        "If Statement Body",
+        10,
+        13
+      ]
+    ],
+    "difficulty": "interview"
+  },
+  {
+    "prompt": "\nclass Solution:\n    def longestConsecutive(self, nums: List[int]) -> int:\n            \"\"\"Given an unsorted array of integers, find the length of the longest consecutive elements sequence.\n\nYour algorithm should run in O(n) complexity.\n\nExample:\n\n\nInput:\u00a0[100, 4, 200, 1, 3, 2]\nOutput: 4\nExplanation: The longest consecutive elements sequence is [1, 2, 3, 4]. Therefore its length is 4.\n    \"\"\"\n",
+    "canonical_solution": "class Solution:\n     def longestConsecutive(self, nums):\n         \"\"\"\n         :type nums: List[int]\n         :rtype: int\n         \"\"\"\n         longest_streak = 0\n         num_set = set(nums)\n         for num in num_set:\n             if num - 1 not in num_set:\n                 current_num = num\n                 current_streak = 1\n                 \n                 while current_num + 1 in num_set:\n                     current_num += 1\n                     current_streak += 1\n                     \n                 longest_streak = max(longest_streak, current_streak)\n         return longest_streak",
+    "inputs": [
+      [
+        [
+          100,
+          4,
+          200,
+          1,
+          3,
+          2
+        ]
+      ]
+    ],
+    "outputs": [
+      [
+        4
+      ]
+    ],
+    "starter_code": "\nclass Solution:\n    def longestConsecutive(self, nums: List[int]) -> int:\n        ",
+    "scope": [
+      [
+        "Class Body",
+        1,
+        19
+      ],
+      [
+        "Function Body",
+        2,
+        19
+      ],
+      [
+        "For Loop Body",
+        9,
+        18
+      ],
+      [
+        "If Statement Body",
+        10,
+        18
+      ],
+      [
+        "While Loop Body",
+        14,
+        16
+      ]
+    ],
+    "difficulty": "interview"
+  }
+]
