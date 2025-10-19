@@ -59,9 +59,9 @@ def execute_tool(name, args):
     if name == "bash_command":
         import subprocess
         try:
+            bash_path = r"C:\Program Files\Git\bin\bash.exe"  # Adjust path if your Git is installed elsewhere
             result = subprocess.run(
-                args["command"],
-                shell=True,
+                [bash_path, "-c", args["command"]],   # run Git Bash with -c "command"
                 capture_output=True,
                 text=True,
                 timeout=10
@@ -80,7 +80,14 @@ def execute_tool(name, args):
     return "Unknown tool"
 
 # Agent with max iterations
-def agent(user_prompt, system_message=None, max_iterations=15, model_name="deepseek/deepseek-chat-v3", tools=None):
+def agent(user_prompt, system_message=None, max_iterations=15, model_name="deepseek/deepseek-chat-v3", tools=None, output_instruction = """Output ONLY this JSON format (no markdown fences, no extra text):
+{
+  "thinking": "<your step-by-step reasoning>",
+  "name": "<function_name>",
+  "code": "<complete_python_function_code_only>"
+}
+
+CRITICAL: The "code" field must contain ONLY the code to make function run correct, no unit test code."}"""):
     messages = []
 
     # Use provided tools or default to agent_tools
@@ -135,7 +142,7 @@ def agent(user_prompt, system_message=None, max_iterations=15, model_name="deeps
             # Final text response
             print(f"Type: TEXT_RESPONSE")
             print(f"Content: {msg.content}")
-            return messages, msg.content
+            break
 
     print(f"\n{'='*60}")
     print("MAX ITERATIONS REACHED")
@@ -143,7 +150,7 @@ def agent(user_prompt, system_message=None, max_iterations=15, model_name="deeps
 
     messages.append({
         "role": "user",
-        "content": "Maximum iterations reached. Provide your final answer now without using tools."
+        "content": output_instruction
     })
 
     final_response = client.chat.completions.create(
@@ -315,93 +322,36 @@ def clean_json_output(output: str):
 # Test
 if __name__ == "__main__":
     # Test-driven development system message
-    test_driven_agent_system_prompt = """You are a test-driven development agent. Follow these steps:
+    test_driven_agent_system_prompt = """
+You are a test-driven development agent. 
+Follow these steps:
 1. Analyze the problem requirements and extract a SHORT problem name (e.g., "is_prime", "fibonacci", "sort_array").
+* Use tool to check the available directory and scripts exists.
 2. Ensure directory `test_driven_agent` exists (e.g., `mkdir -p test_driven_agent`).
 3. Create `test_driven_agent/<problem_name>.py` that contains both the solution implementation and comprehensive automated tests that execute when the file runs.
 4. Run the combined file with `python test_driven_agent/<problem_name>.py` to validate the solution against the tests.
-5. Refine `test_driven_agent/<problem_name>.py`, rerunning `python test_driven_agent/<problem_name>.py` until all tests pass or the maximum iteration limit is reached.
-6. When finished, review the conversation history and output a final JSON report summarizing the effort, referencing key iterations. The JSON must include `problem_name`, `status` ("passed" or "failed"), `iterations_used`, and `summary`.
+
+5.**IMPORTANT** Refine `test_driven_agent/<problem_name>.py`, rerunning `python test_driven_agent/<problem_name>.py` until all tests pass 
+
 
 Constraints:
 - All artifacts must stay inside `test_driven_agent/`.
 - Only the single file `test_driven_agent/<problem_name>.py` may be created; it must contain both tests and solution code.
-- Use the same `<problem_name>` everywhere, including filenames, function identifiers, and the final JSON report.
+- Use the same `<problem_name>` everywhere, including filenames, function identifiers
+"""
 
-Example for "is_prime":
-- mkdir -p test_driven_agent
-- printf "tests and solution" > test_driven_agent/is_prime.py
-- python test_driven_agent/is_prime.py"""
-
-
-
-
-    user_task = """
-        "Given an array representing a branch of a tree that has non-negative integer nodes
-    your task is to pluck one of the nodes and return it.
-    The plucked node should be the node with the smallest even value.
-    If multiple nodes with the same smallest even value are found return the node that has smallest index.
-
-    The plucked node should be returned in a list, [ smalest_value, its index ],
-    If there are no even values or the given array is empty, return [].
-
-    Example 1:
-        Input: [4,2,3]
-        Output: [2, 1]
-        Explanation: 2 has the smallest even value, and 2 has the smallest index.
-
-    Example 2:
-        Input: [1,2,3]
-        Output: [2, 1]
-        Explanation: 2 has the smallest even value, and 2 has the smallest index. 
-
-    Example 3:
-        Input: []
-        Output: []
     
-    Example 4:
-        Input: [5, 0, 3, 0, 4, 2]
-        Output: [0, 1]
-        Explanation: 0 is the smallest value, but  there are two zeros,
-                     so we will choose the first zero, which has the smallest index.
-
-    Constraints:
-        * 1 <= nodes.length <= 10000
-        * 0 <= node.value
-    """
-
-    normal_coding_agent = """
-You are a coding assistant. 
-Think step by step first 
-Solve the following problem and return ONLY valid JSON.
-
-The JSON format must be:
-
-{
-  "name": "<function_name>",
-  "code": "<python_function_code>"
-}
-
-Requirements:
-- Put the entire function in "code" as a valid Python function string.
-- Do not include imports unless required.
-- Do not include extra text or explanations, only JSON. do not include 
-```json
-content
-```, just output json content
-    """
-    with open("humaneval_hard9.json",'r') as file:
-        hp9 = json.load(file)
-    h129 = hp9['HumanEval/129']
-    test_p = h129['prompt']
-    test_t = h129['test']
+    
     # solution = h129['canonical_solution']
     
     # string_to_function(test_t,"check")(string_to_function(solution,h129['entry_point']))
     # print(f"passed")
+    problems_file = 'hard_apps_problem.json'
+    with open(problems_file, encoding='utf-8') as f:
+        problems = json.load(f)
     history, answer = agent(
-        user_prompt=test_p,
-        system_message=normal_coding_agent,
+        user_prompt=problems[0]['prompt'],
+        system_message=test_driven_agent_system_prompt,
         max_iterations=15,
         tools=agent_tools
     )
@@ -412,14 +362,7 @@ content
     # print(f"history {history}")
     print(f"{'='*60}")
     
-    try:
-        answer = clean_json_output(answer)
-        print(answer)
-        name, code = json.loads(answer)['name'],json.loads(answer)['code']
-        print(f"name {name}, code: {code}")
-        run_code = string_to_function(code,name)
-        test_code = string_to_function(test_t,"check")
-        test_code(run_code)
-        print(f"pass the check")
-    except Exception as e:
-        print(f"error {e}")
+    
+    answer = clean_json_output(answer)
+    print(answer)
+        

@@ -1,0 +1,127 @@
+{
+  "model": "deepseek/deepseek-chat-v3",
+  "strategies": {
+    "test_driven": {
+      "system_prompt": "\nYou are a test-driven development agent. \nFollow these steps:\n1. Analyze the problem requirements and extract a SHORT problem name (e.g., \"is_prime\", \"fibonacci\", \"sort_array\").\n* Use tool to check the available directory and scripts exists.\n2. Ensure directory `test_driven_agent` exists (e.g., `mkdir -p test_driven_agent`).\n3. Create `test_driven_agent/<problem_name>.py` that contains both the solution implementation and comprehensive automated tests that execute when the file runs.\n4. Run the combined file with `python test_driven_agent/<problem_name>.py` to validate the solution against the tests.\n\n5.**IMPORTANT** Refine `test_driven_agent/<problem_name>.py`, rerunning `python test_driven_agent/<problem_name>.py` until all tests pass \n\n\nConstraints:\n- All artifacts must stay inside `test_driven_agent/`.\n- Only the single file `test_driven_agent/<problem_name>.py` may be created; it must contain both tests and solution code.\n- Use the same `<problem_name>` everywhere, including filenames, function identifiers\n",
+      "description": "Self-Planning strategy (two LLM calls)."
+    }
+  },
+  "tests": {
+    "problem_0": {
+      "prompt": "\ndef b91decode(strng):\n\t    \"\"\"[BasE91](http://base91.sourceforge.net/) is a method for encoding binary as ASCII characters. It is more efficient than Base64 and needs 91 characters to represent the encoded data.\n\nThe following ASCII charakters are used:\n\n    'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'\n    '!#$%&()*+,./:;<=>?@[]^_`{|}~\"'\n    \nCreate two functions that encode strings to basE91 string and decodes the other way round. \n\n    b91encode('test') = 'fPNKd'\n    b91decode('fPNKd') = 'test'\n    \n    b91decode('>OwJh>Io0Tv!8PE') = 'Hello World!'\n    b91encode('Hello World!') = '>OwJh>Io0Tv!8PE'\n    \nInput strings are valid.\n    \"\"\"\n",
+      "strategies": {
+        "test_driven": {
+          "thinking": "The Base91 decoding implementation needs to correctly handle the bit manipulation and character mapping. The previous attempts failed because the bit shifting and masking were not properly implemented. This version carefully follows the Base91 specification to ensure correct decoding.",
+          "name": "b91decode",
+          "code": "def b91decode(data):\n    \"\"\"Decode Base91 string to bytes.\"\"\"\n    b = 0\n    n = 0\n    out = []\n    alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!#$%&()*+,./:;<=>?@[]^_`{|}~\"'\n    \n    for c in data:\n        if c not in alphabet:\n            continue\n        v = alphabet.index(c)\n        if v < 0 or v > 90:\n            continue\n        if n == 0:\n            b = v\n            n = 13\n        else:\n            b += v * (1 << n)\n            n += 13 if (b & 8191) > 88 else 14\n            while True:\n                out.append(bytes([b & 255]))\n                b >>= 8\n                n -= 8\n                if n <= 7:\n                    break\n    \n    if n > 0:\n        out.append(bytes([b]))\n    \n    return b''.join(out).decode('latin1')",
+          "passed": false,
+          "error": "Some test cases failed",
+          "test_results": [
+            {
+              "test_case": 1,
+              "passed": false,
+              "expected": "Hello World!",
+              "actual": "NÀ\u0001\u0001\t \u0004p\u0002\b\u0000\u0005 \u0001\u0013à\u0005ð\u0001<à\u0001 \u0000\u0000",
+              "error": "Output mismatch"
+            },
+            {
+              "test_case": 2,
+              "passed": false,
+              "expected": "test",
+              "actual": "\u001fà\u0001h\u0000\n \u0003\u0000",
+              "error": "Output mismatch"
+            }
+          ],
+          "pass_rate": "0/2"
+        }
+      }
+    },
+    "problem_1": {
+      "prompt": "\nclass Solution:\n    def maxSizeSlices(self, slices: List[int]) -> int:\n            \"\"\"There is a pizza with 3n slices of varying size, you and your friends will take slices of pizza as follows:\n\nYou will pick any pizza slice.\nYour friend Alice will pick next slice in anti clockwise direction of your pick. \nYour friend Bob will pick next slice in clockwise direction of your pick.\nRepeat until there are no more slices of pizzas.\n\nSizes of Pizza slices is represented by circular array slices in clockwise direction.\nReturn the maximum possible sum of slice sizes which you can have.\n \nExample 1:\n\nInput: slices = [1,2,3,4,5,6]\nOutput: 10\nExplanation: Pick pizza slice of size 4, Alice and Bob will pick slices with size 3 and 5 respectively. Then Pick slices with size 6, finally Alice and Bob will pick slice of size 2 and 1 respectively. Total = 4 + 6.\n\nExample 2:\n\nInput: slices = [8,9,8,6,1,1]\nOutput: 16\nOutput: Pick pizza slice of size 8 in each turn. If you pick slice with size 9 your partners will pick slices of size 8.\n\nExample 3:\nInput: slices = [4,1,2,5,8,3,1,9,7]\nOutput: 21\n\nExample 4:\nInput: slices = [3,1,2]\nOutput: 3\n\n \nConstraints:\n\n1 <= slices.length <= 500\nslices.length % 3 == 0\n1 <= slices[i] <= 1000\n    \"\"\"\n",
+      "strategies": {
+        "test_driven": {
+          "thinking": "",
+          "name": "",
+          "code": "",
+          "passed": false,
+          "error": "Expecting value: line 1 column 1 (char 0)",
+          "test_results": [],
+          "pass_rate": "0/1"
+        }
+      }
+    },
+    "problem_2": {
+      "prompt": "\nclass Solution:\n    def numTimesAllBlue(self, light: List[int]) -> int:\n            \"\"\"There is a room with n bulbs, numbered from 1 to n, arranged in a row from left to right. Initially, all the bulbs are turned off.\nAt moment k (for k from 0 to n - 1), we turn on the light[k] bulb. A bulb change color to blue only if it is on and all the previous bulbs (to the left) are turned on too.\nReturn the number of moments in which all turned on bulbs are blue.\n \nExample 1:\n\nInput: light = [2,1,3,5,4]\nOutput: 3\nExplanation: All bulbs turned on, are blue at the moment 1, 2 and 4.\n\nExample 2:\nInput: light = [3,2,4,1,5]\nOutput: 2\nExplanation: All bulbs turned on, are blue at the moment 3, and 4 (index-0).\n\nExample 3:\nInput: light = [4,1,2,3]\nOutput: 1\nExplanation: All bulbs turned on, are blue at the moment 3 (index-0).\nBulb 4th changes to blue at the moment 3.\n\nExample 4:\nInput: light = [2,1,4,3,6,5]\nOutput: 3\n\nExample 5:\nInput: light = [1,2,3,4,5,6]\nOutput: 6\n\n \nConstraints:\n\nn == light.length\n1 <= n <= 5 * 10^4\nlight is a permutation of  [1, 2, ..., n]\n    \"\"\"\n",
+      "strategies": {
+        "test_driven": {
+          "thinking": "To solve this problem, we need to track the rightmost turned-on bulb and compare it with the current count of turned-on bulbs. If they match, it means all bulbs up to that point are blue. We can achieve this by iterating through the `light` list, keeping track of the maximum bulb turned on so far, and incrementing the count when the maximum matches the current index + 1.",
+          "name": "num_times_all_blue",
+          "code": "def num_times_all_blue(light):\n    max_bulb = 0\n    count = 0\n    for i, bulb in enumerate(light):\n        max_bulb = max(max_bulb, bulb)\n        if max_bulb == i + 1:\n            count += 1\n    return count",
+          "passed": true,
+          "error": "",
+          "test_results": [
+            {
+              "test_case": 1,
+              "passed": true,
+              "expected": "3",
+              "actual": "3",
+              "error": ""
+            }
+          ],
+          "pass_rate": "1/1"
+        }
+      }
+    },
+    "problem_3": {
+      "prompt": "\nclass Solution:\n    def unhappyFriends(self, n: int, preferences: List[List[int]], pairs: List[List[int]]) -> int:\n            \"\"\"You are given a list of preferences for n friends, where n is always even.\nFor each person i, preferences[i] contains a list of friends sorted in the order of preference. In other words, a friend earlier in the list is more preferred than a friend later in the list. Friends in each list are denoted by integers from 0 to n-1.\nAll the friends are divided into pairs. The pairings are given in a list pairs, where pairs[i] = [xi, yi] denotes xi is paired with yi and yi is paired with xi.\nHowever, this pairing may cause some of the friends to be unhappy. A friend x is unhappy if x is paired with y and there exists a friend u who is paired with v but:\n\nx prefers u over y, and\nu prefers x over v.\n\nReturn the number of unhappy friends.\n \nExample 1:\nInput: n = 4, preferences = [[1, 2, 3], [3, 2, 0], [3, 1, 0], [1, 2, 0]], pairs = [[0, 1], [2, 3]]\nOutput: 2\nExplanation:\nFriend 1 is unhappy because:\n- 1 is paired with 0 but prefers 3 over 0, and\n- 3 prefers 1 over 2.\nFriend 3 is unhappy because:\n- 3 is paired with 2 but prefers 1 over 2, and\n- 1 prefers 3 over 0.\nFriends 0 and 2 are happy.\n\nExample 2:\nInput: n = 2, preferences = [[1], [0]], pairs = [[1, 0]]\nOutput: 0\nExplanation: Both friends 0 and 1 are happy.\n\nExample 3:\nInput: n = 4, preferences = [[1, 3, 2], [2, 3, 0], [1, 3, 0], [0, 2, 1]], pairs = [[1, 3], [0, 2]]\nOutput: 4\n\n \nConstraints:\n\n2 <= n <= 500\nn is even.\npreferences.length == n\npreferences[i].length == n - 1\n0 <= preferences[i][j] <= n - 1\npreferences[i] does not contain i.\nAll values in preferences[i] are unique.\npairs.length == n/2\npairs[i].length == 2\nxi != yi\n0 <= xi, yi <= n - 1\nEach person is contained in exactly one pair.\n    \"\"\"\n",
+      "strategies": {
+        "test_driven": {
+          "thinking": "To solve this problem, we need to count unhappy friends based on their preferences and current pairings. A friend x is unhappy if they prefer someone u over their current partner y, and u also prefers x over their current partner v. The solution involves: 1) creating a pairing map, 2) creating preference rankings for quick lookup, and 3) checking each friend's preferences against their current partner to identify unhappy friends.",
+          "name": "unhappyFriends",
+          "code": "def unhappyFriends(n: int, preferences: List[List[int]], pairs: List[List[int]]) -> int:\n    # Create pairing dictionary\n    pair = {}\n    for x, y in pairs:\n        pair[x] = y\n        pair[y] = x\n    \n    # Create preference ranking dictionaries for quick lookup\n    pref_rank = [{} for _ in range(n)]\n    for i in range(n):\n        for rank, friend in enumerate(preferences[i]):\n            pref_rank[i][friend] = rank\n    \n    unhappy = set()\n    \n    # Check each friend for unhappiness\n    for x in range(n):\n        y = pair[x]\n        for u in preferences[x]:\n            if u == y:\n                break  # No more preferred friends\n            v = pair[u]\n            if pref_rank[u][x] < pref_rank[u][v]:\n                unhappy.add(x)\n                break\n    \n    return len(unhappy)",
+          "passed": false,
+          "error": "Some test cases failed",
+          "test_results": [
+            {
+              "test_case": 1,
+              "passed": false,
+              "expected": "[2]",
+              "actual": "",
+              "error": "not enough values to unpack (expected 2, got 0)"
+            }
+          ],
+          "pass_rate": "0/1"
+        }
+      }
+    },
+    "problem_4": {
+      "prompt": "\nclass Solution:\n    def minSwaps(self, grid: List[List[int]]) -> int:\n            \"\"\"Given an n x n binary grid, in one step you can choose two adjacent rows of the grid and swap them.\nA grid is said to be valid if all the cells above the main diagonal are zeros.\nReturn the minimum number of steps needed to make the grid valid, or -1 if the grid cannot be valid.\nThe main diagonal of a grid is the diagonal that starts at cell (1, 1) and ends at cell (n, n).\n \nExample 1:\n\nInput: grid = [[0,0,1],[1,1,0],[1,0,0]]\nOutput: 3\n\nExample 2:\n\nInput: grid = [[0,1,1,0],[0,1,1,0],[0,1,1,0],[0,1,1,0]]\nOutput: -1\nExplanation: All rows are similar, swaps have no effect on the grid.\n\nExample 3:\n\nInput: grid = [[1,0,0],[1,1,0],[1,1,1]]\nOutput: 0\n\n \nConstraints:\n\nn == grid.length\nn == grid[i].length\n1 <= n <= 200\ngrid[i][j] is 0 or 1\n    \"\"\"\n",
+      "strategies": {
+        "test_driven": {
+          "thinking": "The problem involves determining the minimum number of adjacent row swaps required to make a binary grid valid, where validity is defined by all cells above the main diagonal being zeros. The solution requires analyzing each row's trailing zeros and ensuring they meet the required criteria for the grid to be valid. If it's impossible to achieve this, the function should return -1.",
+          "name": "minSwaps",
+          "code": "from typing import List\n\nclass Solution:\n    def minSwaps(self, grid: List[List[int]]) -> int:\n        n = len(grid)\n        # For each row, count trailing zeros (from the end)\n        trailing_zeros = []\n        for row in grid:\n            zeros = 0\n            for i in range(n - 1, -1, -1):\n                if row[i] == 0:\n                    zeros += 1\n                else:\n                    break\n            trailing_zeros.append(zeros)\n        \n        swaps = 0\n        # Iterate to find the required trailing zeros for each row\n        for i in range(n):\n            required_zeros = n - 1 - i\n            # Find the first row with >= required_zeros and swap it up\n            found = -1\n            for j in range(i, n):\n                if trailing_zeros[j] >= required_zeros:\n                    found = j\n                    break\n            if found == -1:\n                return -1\n            # Swap rows to bring found row to position i\n            # Record the swap steps (j - i for adjacent swaps)\n            swaps += found - i\n            # Update trailing_zeros list (move the found row to position i)\n            row_zeros = trailing_zeros.pop(found)\n            trailing_zeros.insert(i, row_zeros)\n        return swaps",
+          "passed": false,
+          "error": "Some test cases failed",
+          "test_results": [
+            {
+              "test_case": 1,
+              "passed": false,
+              "expected": "[3]",
+              "actual": "",
+              "error": "list index out of range"
+            }
+          ],
+          "pass_rate": "0/1"
+        }
+      }
+    }
+  },
+  "summary": {
+    "test_driven": {
+      "total_problems": 5,
+      "fully_passed": 1,
+      "pass_rate": "1/5 (20.0%)"
+    }
+  }
+}

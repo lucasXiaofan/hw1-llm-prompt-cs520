@@ -1,0 +1,206 @@
+{
+  "model": "google/gemini-2.0-flash-001",
+  "strategies": {
+    "self_planning": {
+      "system_prompt": "PLAN: Create a numbered step-by-step solution plan. Focus on algorithm, not code. Output only the plan.\nCODE: Implement the plan in Python. Output JSON: {\"name\": \"function_name\", \"code\": \"def function_name(...):\\n    ...\"}",
+      "description": "Self-Planning strategy (two LLM calls)."
+    },
+    "test_driven": {
+      "system_prompt": "\nYou are a test-driven development agent. \nFollow these steps:\n1. Analyze the problem requirements and extract a SHORT problem name (e.g., \"is_prime\", \"fibonacci\", \"sort_array\").\n* Use tool to check the available directory and scripts exists.\n2. Ensure directory `test_driven_agent` exists (e.g., `mkdir -p test_driven_agent`).\n3. Create `test_driven_agent/<problem_name>.py` that contains both the solution implementation and comprehensive automated tests that execute when the file runs.\n4. Run the combined file with `python test_driven_agent/<problem_name>.py` to validate the solution against the tests.\n\n5.**IMPORTANT** Refine `test_driven_agent/<problem_name>.py`, rerunning `python test_driven_agent/<problem_name>.py` until all tests pass \n\n\nConstraints:\n- All artifacts must stay inside `test_driven_agent/`.\n- Only the single file `test_driven_agent/<problem_name>.py` may be created; it must contain both tests and solution code.\n- Use the same `<problem_name>` everywhere, including filenames, function identifiers\n",
+      "description": "Self-Planning strategy (two LLM calls)."
+    }
+  },
+  "tests": {
+    "problem_0": {
+      "prompt": "\ndef b91decode(strng):\n\t    \"\"\"[BasE91](http://base91.sourceforge.net/) is a method for encoding binary as ASCII characters. It is more efficient than Base64 and needs 91 characters to represent the encoded data.\n\nThe following ASCII charakters are used:\n\n    'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'\n    '!#$%&()*+,./:;<=>?@[]^_`{|}~\"'\n    \nCreate two functions that encode strings to basE91 string and decodes the other way round. \n\n    b91encode('test') = 'fPNKd'\n    b91decode('fPNKd') = 'test'\n    \n    b91decode('>OwJh>Io0Tv!8PE') = 'Hello World!'\n    b91encode('Hello World!') = '>OwJh>Io0Tv!8PE'\n    \nInput strings are valid.\n    \"\"\"\n",
+      "strategies": {
+        "self_planning": {
+          "thinking": "",
+          "name": "",
+          "code": "",
+          "passed": false,
+          "error": "Expecting ',' delimiter: line 1 column 60 (char 59)",
+          "test_results": [],
+          "pass_rate": "0/2"
+        },
+        "test_driven": {
+          "thinking": "",
+          "name": "",
+          "code": "",
+          "passed": false,
+          "error": "Expecting ',' delimiter: line 4 column 40 (char 276)",
+          "test_results": [],
+          "pass_rate": "0/2"
+        }
+      }
+    },
+    "problem_1": {
+      "prompt": "\nclass Solution:\n    def maxSizeSlices(self, slices: List[int]) -> int:\n            \"\"\"There is a pizza with 3n slices of varying size, you and your friends will take slices of pizza as follows:\n\nYou will pick any pizza slice.\nYour friend Alice will pick next slice in anti clockwise direction of your pick. \nYour friend Bob will pick next slice in clockwise direction of your pick.\nRepeat until there are no more slices of pizzas.\n\nSizes of Pizza slices is represented by circular array slices in clockwise direction.\nReturn the maximum possible sum of slice sizes which you can have.\n \nExample 1:\n\nInput: slices = [1,2,3,4,5,6]\nOutput: 10\nExplanation: Pick pizza slice of size 4, Alice and Bob will pick slices with size 3 and 5 respectively. Then Pick slices with size 6, finally Alice and Bob will pick slice of size 2 and 1 respectively. Total = 4 + 6.\n\nExample 2:\n\nInput: slices = [8,9,8,6,1,1]\nOutput: 16\nOutput: Pick pizza slice of size 8 in each turn. If you pick slice with size 9 your partners will pick slices of size 8.\n\nExample 3:\nInput: slices = [4,1,2,5,8,3,1,9,7]\nOutput: 21\n\nExample 4:\nInput: slices = [3,1,2]\nOutput: 3\n\n \nConstraints:\n\n1 <= slices.length <= 500\nslices.length % 3 == 0\n1 <= slices[i] <= 1000\n    \"\"\"\n",
+      "strategies": {
+        "self_planning": {
+          "thinking": "1.  Define `n` as the number of slices you can take, which is `len(slices) // 3`.\n2.  Consider the problem as selecting `n` non-adjacent elements from a circular array to maximize their sum.\n3.  Break the circular array problem into two linear array problems:\n    *   One including the first element and excluding the last.\n    *   One excluding the first element and including the last.\n4.  Solve the linear array problem using dynamic programming. Define `dp[i][j]` as the maximum sum achievable by selecting `j` non-adjacent elements from the first `i` elements of the linear array.\n5.  The base cases for the DP are:\n    *   `dp[i][0] = 0` for all `i`.\n    *   `dp[0][j] = -infinity` for all `j > 0`.\n6.  The recurrence relation for the DP is:\n    *   `dp[i][j] = max(dp[i-1][j], slices[i-1] + dp[i-2][j-1])`. This means either we don't take the `i-th` slice, or we take it and add it to the maximum sum achievable by taking `j-1` slices from the first `i-2` slices.\n7.  Apply the DP to both linear arrays (including the first, excluding the last; and excluding the first, including the last).\n8.  Return the maximum of the results from the two linear array DP solutions.",
+          "name": "maxSizeSlices",
+          "code": "class Solution:\n    def maxSizeSlices(self, slices: List[int]) -> int:\n        n = len(slices) // 3\n\n        def solve(arr):\n            m = len(arr)\n            dp = [[0] * (n + 1) for _ in range(m + 1)]\n\n            for i in range(m + 1):\n                dp[i][0] = 0\n\n            for j in range(1, n + 1):\n                dp[0][j] = float('-inf')\n\n            for i in range(1, m + 1):\n                for j in range(1, n + 1):\n                    dp[i][j] = max(dp[i - 1][j], arr[i - 1] + dp[i - 2][j - 1] if i > 1 else arr[i-1])\n\n            return dp[m][n]\n\n        return max(solve(slices[:-1]), solve(slices[1:]))\n",
+          "passed": true,
+          "error": "",
+          "test_results": [
+            {
+              "test_case": 1,
+              "passed": true,
+              "expected": "10",
+              "actual": "10",
+              "error": ""
+            }
+          ],
+          "pass_rate": "1/1"
+        },
+        "test_driven": {
+          "thinking": "The problem is to find the maximum sum of slices that can be obtained from a circular array, given that after picking a slice, the adjacent slices are removed. This can be solved using dynamic programming. The circular nature of the array can be handled by considering two cases: one where the first element is included and one where it is not. The dynamic programming approach involves building a table where dp[i][j] represents the maximum sum that can be obtained by picking j slices from the first i slices of the array. The transition is either to not pick the i-th slice (dp[i-1][j]) or to pick the i-th slice (arr[i-1] + dp[i-2][j-1]).",
+          "name": "maxSizeSlices",
+          "code": "from typing import List\n\nclass Solution:\n    def maxSizeSlices(self, slices: List[int]) -> int:\n        \"\"\"\n        Calculates the maximum possible sum of slice sizes which you can have.\n        \"\"\"\n        k = len(slices) // 3\n\n        def solve(arr: List[int]) -> int:\n            n = len(arr)\n            dp = [[0] * (k + 1) for _ in range(n + 1)]\n\n            for i in range(1, n + 1):\n                for j in range(1, k + 1):\n                    dp[i][j] = max(dp[i-1][j], (arr[i-1] + (dp[i-2][j-1] if i > 1 else 0)))\n            return dp[n][k]\n\n        # Solve without the first slice\n        ans1 = solve(slices[1:])\n\n        # Solve without the last slice\n        ans2 = solve(slices[:-1])\n\n        return max(ans1, ans2)",
+          "passed": true,
+          "error": "",
+          "test_results": [
+            {
+              "test_case": 1,
+              "passed": true,
+              "expected": "10",
+              "actual": "10",
+              "error": ""
+            }
+          ],
+          "pass_rate": "1/1"
+        }
+      }
+    },
+    "problem_2": {
+      "prompt": "\nclass Solution:\n    def numTimesAllBlue(self, light: List[int]) -> int:\n            \"\"\"There is a room with n bulbs, numbered from 1 to n, arranged in a row from left to right. Initially, all the bulbs are turned off.\nAt moment k (for k from 0 to n - 1), we turn on the light[k] bulb. A bulb change color to blue only if it is on and all the previous bulbs (to the left) are turned on too.\nReturn the number of moments in which all turned on bulbs are blue.\n \nExample 1:\n\nInput: light = [2,1,3,5,4]\nOutput: 3\nExplanation: All bulbs turned on, are blue at the moment 1, 2 and 4.\n\nExample 2:\nInput: light = [3,2,4,1,5]\nOutput: 2\nExplanation: All bulbs turned on, are blue at the moment 3, and 4 (index-0).\n\nExample 3:\nInput: light = [4,1,2,3]\nOutput: 1\nExplanation: All bulbs turned on, are blue at the moment 3 (index-0).\nBulb 4th changes to blue at the moment 3.\n\nExample 4:\nInput: light = [2,1,4,3,6,5]\nOutput: 3\n\nExample 5:\nInput: light = [1,2,3,4,5,6]\nOutput: 6\n\n \nConstraints:\n\nn == light.length\n1 <= n <= 5 * 10^4\nlight is a permutation of  [1, 2, ..., n]\n    \"\"\"\n",
+      "strategies": {
+        "self_planning": {
+          "thinking": "1.  Initialize `rightmost` to 0. This variable will track the rightmost turned-on bulb.\n2.  Initialize `count` to 0. This variable will store the number of moments when all turned-on bulbs are blue.\n3.  Iterate through the `light` list using a `for` loop with index `i` from 0 to `n-1`.\n4.  In each iteration, update `rightmost` to the maximum of its current value and `light[i]`. This ensures `rightmost` always holds the index of the furthest right turned-on bulb.\n5.  Check if `rightmost` is equal to `i + 1`. If they are equal, it means all bulbs from 1 to `i + 1` are turned on, and therefore all turned-on bulbs are blue at this moment.\n6.  If the condition in step 5 is true, increment `count`.\n7.  After the loop finishes, return the final value of `count`.",
+          "name": "numTimesAllBlue",
+          "code": "def numTimesAllBlue(light: List[int]) -> int:\n    rightmost = 0\n    count = 0\n    for i in range(len(light)):\n        rightmost = max(rightmost, light[i])\n        if rightmost == i + 1:\n            count += 1\n    return count",
+          "passed": true,
+          "error": "",
+          "test_results": [
+            {
+              "test_case": 1,
+              "passed": true,
+              "expected": "3",
+              "actual": "3",
+              "error": ""
+            }
+          ],
+          "pass_rate": "1/1"
+        },
+        "test_driven": {
+          "thinking": "The problem asks to count the number of moments when all turned-on bulbs are blue. A bulb turns blue if it and all bulbs to its left are turned on. The solution iterates through the `light` list, keeping track of the maximum bulb number seen so far (`right_max`). At each step, it checks if `right_max` is equal to the current index plus one. If they are equal, it means all bulbs from 1 to `i+1` are turned on, and thus all turned-on bulbs are blue at that moment. The count is incremented accordingly.",
+          "name": "numTimesAllBlue",
+          "code": "class Solution:\n    def numTimesAllBlue(self, light: list[int]) -> int:\n        n = len(light)\n        right_max = 0\n        count = 0\n        for i in range(n):\n            right_max = max(right_max, light[i])\n            if right_max == i + 1:\n                count += 1\n        return count",
+          "passed": true,
+          "error": "",
+          "test_results": [
+            {
+              "test_case": 1,
+              "passed": true,
+              "expected": "3",
+              "actual": "3",
+              "error": ""
+            }
+          ],
+          "pass_rate": "1/1"
+        }
+      }
+    },
+    "problem_3": {
+      "prompt": "\nclass Solution:\n    def unhappyFriends(self, n: int, preferences: List[List[int]], pairs: List[List[int]]) -> int:\n            \"\"\"You are given a list of preferences for n friends, where n is always even.\nFor each person i, preferences[i] contains a list of friends sorted in the order of preference. In other words, a friend earlier in the list is more preferred than a friend later in the list. Friends in each list are denoted by integers from 0 to n-1.\nAll the friends are divided into pairs. The pairings are given in a list pairs, where pairs[i] = [xi, yi] denotes xi is paired with yi and yi is paired with xi.\nHowever, this pairing may cause some of the friends to be unhappy. A friend x is unhappy if x is paired with y and there exists a friend u who is paired with v but:\n\nx prefers u over y, and\nu prefers x over v.\n\nReturn the number of unhappy friends.\n \nExample 1:\nInput: n = 4, preferences = [[1, 2, 3], [3, 2, 0], [3, 1, 0], [1, 2, 0]], pairs = [[0, 1], [2, 3]]\nOutput: 2\nExplanation:\nFriend 1 is unhappy because:\n- 1 is paired with 0 but prefers 3 over 0, and\n- 3 prefers 1 over 2.\nFriend 3 is unhappy because:\n- 3 is paired with 2 but prefers 1 over 2, and\n- 1 prefers 3 over 0.\nFriends 0 and 2 are happy.\n\nExample 2:\nInput: n = 2, preferences = [[1], [0]], pairs = [[1, 0]]\nOutput: 0\nExplanation: Both friends 0 and 1 are happy.\n\nExample 3:\nInput: n = 4, preferences = [[1, 3, 2], [2, 3, 0], [1, 3, 0], [0, 2, 1]], pairs = [[1, 3], [0, 2]]\nOutput: 4\n\n \nConstraints:\n\n2 <= n <= 500\nn is even.\npreferences.length == n\npreferences[i].length == n - 1\n0 <= preferences[i][j] <= n - 1\npreferences[i] does not contain i.\nAll values in preferences[i] are unique.\npairs.length == n/2\npairs[i].length == 2\nxi != yi\n0 <= xi, yi <= n - 1\nEach person is contained in exactly one pair.\n    \"\"\"\n",
+      "strategies": {
+        "self_planning": {
+          "thinking": "1.  Create a dictionary `pair_map` to store the partner of each person. Iterate through the `pairs` list and populate `pair_map` such that `pair_map[x] = y` and `pair_map[y] = x`.\n2.  Initialize a set `unhappy_friends` to store the unhappy friends.\n3.  Iterate through each person `x` from 0 to `n-1`.\n4.  For each person `x`, get their partner `y` from `pair_map[x]`.\n5.  Iterate through the `preferences[x]` list. For each preferred friend `u` in `preferences[x]`:\n    *   If `u` is equal to `y`, it means we have reached the partner of `x` in the preference list, so no need to check further preferred friends. Break the inner loop.\n    *   Get the partner `v` of `u` from `pair_map[u]`.\n    *   Check if `u` prefers `x` over `v`. Iterate through `preferences[u]` to find `x` and `v`. If `x` appears before `v` in `preferences[u]`, it means `u` prefers `x` over `v`.\n    *   If both conditions are met (x prefers u over y, and u prefers x over v), then `x` and `u` are unhappy. Add `x` and `u` to the `unhappy_friends` set.\n6.  Return the length of the `unhappy_friends` set.",
+          "name": "unhappyFriends",
+          "code": "class Solution:\n    def unhappyFriends(self, n: int, preferences: List[List[int]], pairs: List[List[int]]) -> int:\n        pair_map = {}\n        for x, y in pairs:\n            pair_map[x] = y\n            pair_map[y] = x\n\n        unhappy_friends = set()\n\n        for x in range(n):\n            y = pair_map[x]\n            for u in preferences[x]:\n                if u == y:\n                    break\n                v = pair_map[u]\n                if self.prefers(u, x, v, preferences):\n                    unhappy_friends.add(x)\n                    unhappy_friends.add(u)\n\n        return len(unhappy_friends)\n\n    def prefers(self, u: int, x: int, v: int, preferences: List[List[int]]) -> bool:\n        for friend in preferences[u]:\n            if friend == x:\n                return True\n            if friend == v:\n                return False\n        return False\n",
+          "passed": false,
+          "error": "Some test cases failed",
+          "test_results": [
+            {
+              "test_case": 1,
+              "passed": false,
+              "expected": "[2]",
+              "actual": "",
+              "error": "not enough values to unpack (expected 2, got 0)"
+            }
+          ],
+          "pass_rate": "0/1"
+        },
+        "test_driven": {
+          "thinking": "The previous attempts were not successful. I will now focus on writing a clean and concise solution, paying close attention to the problem description and constraints. I will use the `index` method in the `prefers` function to determine the relative preference of two friends. I will also ensure that I am adding both unhappy friends to the `unhappy_friends` set.",
+          "name": "unhappyFriends",
+          "code": "class Solution:\n    def unhappyFriends(self, n: int, preferences, pairs):\n        pair_map = {}\n        for x, y in pairs:\n            pair_map[x] = y\n            pair_map[y] = x\n\n        unhappy_friends = set()\n\n        for x in range(n):\n            y = pair_map[x]\n            for u in range(n):\n                if x == u:\n                    continue\n                v = pair_map[u]\n                if self.prefers(preferences, x, u, y) and self.prefers(preferences, u, x, v):\n                    unhappy_friends.add(x)\n                    unhappy_friends.add(u)\n\n        return len(unhappy_friends)\n\n    def prefers(self, preferences, x, u, y):\n        u_index = -1\n        y_index = -1\n        for i, friend in enumerate(preferences[x]):\n            if friend == u:\n                u_index = i\n            if friend == y:\n                y_index = i\n        if u_index == -1 or y_index == -1:\n            return False\n        return u_index < y_index",
+          "passed": false,
+          "error": "Some test cases failed",
+          "test_results": [
+            {
+              "test_case": 1,
+              "passed": false,
+              "expected": "[2]",
+              "actual": "",
+              "error": "not enough values to unpack (expected 2, got 0)"
+            }
+          ],
+          "pass_rate": "0/1"
+        }
+      }
+    },
+    "problem_4": {
+      "prompt": "\nclass Solution:\n    def minSwaps(self, grid: List[List[int]]) -> int:\n            \"\"\"Given an n x n binary grid, in one step you can choose two adjacent rows of the grid and swap them.\nA grid is said to be valid if all the cells above the main diagonal are zeros.\nReturn the minimum number of steps needed to make the grid valid, or -1 if the grid cannot be valid.\nThe main diagonal of a grid is the diagonal that starts at cell (1, 1) and ends at cell (n, n).\n \nExample 1:\n\nInput: grid = [[0,0,1],[1,1,0],[1,0,0]]\nOutput: 3\n\nExample 2:\n\nInput: grid = [[0,1,1,0],[0,1,1,0],[0,1,1,0],[0,1,1,0]]\nOutput: -1\nExplanation: All rows are similar, swaps have no effect on the grid.\n\nExample 3:\n\nInput: grid = [[1,0,0],[1,1,0],[1,1,1]]\nOutput: 0\n\n \nConstraints:\n\nn == grid.length\nn == grid[i].length\n1 <= n <= 200\ngrid[i][j] is 0 or 1\n    \"\"\"\n",
+      "strategies": {
+        "self_planning": {
+          "thinking": "1.  Calculate the number of trailing zeros for each row in the grid. Store these counts in a list called `trailing_zeros`.\n2.  Initialize a variable `swaps` to 0. This variable will store the minimum number of swaps needed.\n3.  Iterate through the rows of the grid from top to bottom (index `i` from 0 to n-1).\n4.  For each row `i`, determine the minimum number of trailing zeros required for that row to be valid. This required number is `n - 1 - i`.\n5.  Search for a row `j` (starting from `i`) that has at least `n - 1 - i` trailing zeros.\n    *   If no such row `j` is found (i.e., `j` reaches the end of the `trailing_zeros` list without finding a suitable row), it means the grid cannot be made valid. Return -1.\n6.  If a suitable row `j` is found, perform the necessary swaps to move row `j` to position `i`.\n    *   Increment `swaps` by `j - i`.\n    *   Shift the `trailing_zeros` list elements from index `j` down to index `i+1` to simulate the swap. This means `trailing_zeros[k] = trailing_zeros[k-1]` for `k` from `j` down to `i+1`.\n    *   Place the value of `trailing_zeros[j]` (before shifting) at index `i`.\n7.  After iterating through all rows, return the final value of `swaps`.",
+          "name": "minSwaps",
+          "code": "class Solution:\n    def minSwaps(self, grid: List[List[int]]) -> int:\n        n = len(grid)\n        trailing_zeros = []\n        for row in grid:\n            count = 0\n            for i in range(n - 1, -1, -1):\n                if row[i] == 0:\n                    count += 1\n                else:\n                    break\n            trailing_zeros.append(count)\n\n        swaps = 0\n        for i in range(n):\n            required_zeros = n - 1 - i\n            j = i\n            while j < n and trailing_zeros[j] < required_zeros:\n                j += 1\n\n            if j == n:\n                return -1\n\n            swaps += j - i\n            \n            for k in range(j, i, -1):\n                trailing_zeros[k], trailing_zeros[k-1] = trailing_zeros[k-1], trailing_zeros[k]\n\n        return swaps",
+          "passed": false,
+          "error": "Some test cases failed",
+          "test_results": [
+            {
+              "test_case": 1,
+              "passed": false,
+              "expected": "[3]",
+              "actual": "",
+              "error": "list index out of range"
+            }
+          ],
+          "pass_rate": "0/1"
+        },
+        "test_driven": {
+          "thinking": "The problem requires finding the minimum number of adjacent row swaps to make a grid valid. A grid is valid if all elements above the main diagonal are 0. The core idea is to count trailing zeros for each row and then find the minimum swaps to arrange the rows such that row `i` has at least `n - 1 - i` trailing zeros. I will iterate through the rows, and for each row `i`, find a row `j` (starting from `i`) that has enough trailing zeros to be placed at row `i`. If no such row `j` is found, the grid cannot be made valid, return -1. If a row `j` is found, swap the rows from `j` down to `i+1` to bring row `j` to row `i`. Increment the swap count for each swap.",
+          "name": "minSwaps",
+          "code": "class Solution:\n    def minSwaps(self, grid: list[list[int]]) -> int:\n        n = len(grid)\n        trailing_zeros = []\n        for row in grid:\n            count = 0\n            for i in range(n - 1, -1, -1):\n                if row[i] == 0:\n                    count += 1\n                else:\n                    break\n            trailing_zeros.append(count)\n\n        swaps = 0\n        indices = list(range(n))\n        for i in range(n):\n            required_zeros = n - 1 - i\n            found = False\n            for j in range(i, n):\n                if trailing_zeros[indices[j]] >= required_zeros:\n                    found = True\n                    for k in range(j, i, -1):\n                        indices[k], indices[k - 1] = indices[k - 1], indices[k]\n                        swaps += 1\n                    break\n            if not found:\n                return -1\n        return swaps",
+          "passed": false,
+          "error": "Some test cases failed",
+          "test_results": [
+            {
+              "test_case": 1,
+              "passed": false,
+              "expected": "[3]",
+              "actual": "",
+              "error": "list index out of range"
+            }
+          ],
+          "pass_rate": "0/1"
+        }
+      }
+    }
+  },
+  "summary": {
+    "self_planning": {
+      "total_problems": 5,
+      "fully_passed": 2,
+      "pass_rate": "2/5 (40.0%)"
+    },
+    "test_driven": {
+      "total_problems": 5,
+      "fully_passed": 2,
+      "pass_rate": "2/5 (40.0%)"
+    }
+  }
+}

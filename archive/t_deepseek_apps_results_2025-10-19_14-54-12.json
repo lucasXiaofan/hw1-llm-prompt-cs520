@@ -1,0 +1,175 @@
+{
+  "model": "deepseek/deepseek-chat-v3",
+  "strategies": {
+    "cot": {
+      "system_prompt": "You are an expert programmer. For each problem, follow this step-by-step reasoning process:\n\nSTEP 1 - UNDERSTAND: Read the problem carefully\n- What are the inputs and outputs?\n- What do the examples show?\n- What are the constraints?\n\nSTEP 2 - PLAN: Design your solution\n- What algorithm or approach should you use?\n- What data structures do you need?\n- What's the time/space complexity?\n\nSTEP 3 - EDGE CASES: Identify special cases\n- Empty inputs, single elements, duplicates\n- Boundary values (0, negative, maximum)\n- Invalid or unusual inputs\n\nSTEP 4 - IMPLEMENT: Write clean, correct code\n- Handle all edge cases\n- Use clear variable names\n- Ensure logic is sound\n\nEXAMPLE - Problem: Find the sum of all even numbers in a list\n{\n  \"thinking\": \"STEP 1 - UNDERSTAND: Input is a list of integers, output is a single integer (the sum). Need to identify even numbers (divisible by 2) and add them together. Example: [1,2,3,4] → 2+4 = 6. STEP 2 - PLAN: Use a filtering approach - iterate through the list, check each number with modulo operator (n % 2 == 0), sum the filtered results. Can use generator expression with sum() for clean implementation. Time: O(n), Space: O(1). STEP 3 - EDGE CASES: Empty list → return 0 (sum of nothing). No even numbers → return 0. All even numbers → sum all. List with zero → 0 is even, include it. Negative evens → -2, -4 are even, include them. STEP 4 - IMPLEMENT: Use sum() with generator expression for clarity. The condition 'n % 2 == 0' handles all cases including negatives and zero correctly.\",\n  \"name\": \"sum_evens\",\n  \"code\": \"def sum_evens(numbers):\n    return sum(n for n in numbers if n % 2 == 0)\"\n}\n\nAfter your reasoning, output ONLY this JSON format (no markdown fences, no extra text):\n{\n  \"thinking\": \"<your step-by-step reasoning>\",\n  \"name\": \"<function_name>\",\n  \"code\": \"<complete_python_function_code_only>\"\n\n\nCRITICAL: The \"code\" field must contain ONLY the function code, no thinking or comments.",
+      "description": "Chain-of-Thought strategy (one LLM call)."
+    },
+    "test_driven": {
+      "system_prompt": "\nYou are a test-driven development agent. \nFollow these steps:\n1. Analyze the problem requirements and extract a SHORT problem name (e.g., \"is_prime\", \"fibonacci\", \"sort_array\").\n* Use tool to check the available directory and scripts exists.\n2. Ensure directory `test_driven_agent` exists (e.g., `mkdir -p test_driven_agent`).\n3. Create `test_driven_agent/<problem_name>.py` that contains both the solution implementation and comprehensive automated tests that execute when the file runs.\n4. Run the combined file with `python test_driven_agent/<problem_name>.py` to validate the solution against the tests.\n\n5.**IMPORTANT** Refine `test_driven_agent/<problem_name>.py`, rerunning `python test_driven_agent/<problem_name>.py` until all tests pass \n\n\nConstraints:\n- All artifacts must stay inside `test_driven_agent/`.\n- Only the single file `test_driven_agent/<problem_name>.py` may be created; it must contain both tests and solution code.\n- Use the same `<problem_name>` everywhere, including filenames, function identifiers\n",
+      "description": "Self-Planning strategy (two LLM calls)."
+    }
+  },
+  "tests": {
+    "problem_0": {
+      "prompt": "\ndef b91decode(strng):\n\t    \"\"\"[BasE91](http://base91.sourceforge.net/) is a method for encoding binary as ASCII characters. It is more efficient than Base64 and needs 91 characters to represent the encoded data.\n\nThe following ASCII charakters are used:\n\n    'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'\n    '!#$%&()*+,./:;<=>?@[]^_`{|}~\"'\n    \nCreate two functions that encode strings to basE91 string and decodes the other way round. \n\n    b91encode('test') = 'fPNKd'\n    b91decode('fPNKd') = 'test'\n    \n    b91decode('>OwJh>Io0Tv!8PE') = 'Hello World!'\n    b91encode('Hello World!') = '>OwJh>Io0Tv!8PE'\n    \nInput strings are valid.\n    \"\"\"\n",
+      "strategies": {
+        "cot": {
+          "thinking": "STEP 1 - UNDERSTAND: The problem requires implementing a Base91 decoder. Base91 is a binary-to-text encoding scheme that uses 91 ASCII characters. The input is a Base91 encoded string, and the output is the decoded binary data as a string. Examples show the encoding and decoding process. STEP 2 - PLAN: Base91 decoding involves converting the input string back to a binary number and then converting that number to the original data. The process involves iterating through the input string, calculating the value based on the Base91 character set, and then converting the accumulated value to bytes. STEP 3 - EDGE CASES: The input string is always valid, so no need to handle invalid inputs. However, we need to handle empty strings and ensure the decoding process correctly handles all characters in the Base91 set. STEP 4 - IMPLEMENT: Implement the decoding logic by iterating through the input string, calculating the value, and converting it to bytes. Use the Base91 character set to map characters to their respective values.",
+          "name": "b91decode",
+          "code": "def b91decode(strng):\n    b = 0\n    n = 0\n    out = []\n    for c in strng:\n        if c not in 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!#$%&()*+,./:;<=>?@[]^_`{|}~\"':\n            continue\n        v = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!#$%&()*+,./:;<=>?@[]^_`{|}~\"'.index(c)\n        b |= v << n\n        n += 13 if (n + 13) < 32 else 0\n        if n > 7:\n            out.append(b & 255)\n            b >>= 8\n            n -= 8\n    if n > 0:\n        out.append(b & 255)\n    return ''.join(map(chr, out))",
+          "passed": false,
+          "error": "Some test cases failed",
+          "test_results": [
+            {
+              "test_case": 1,
+              "passed": false,
+              "expected": "Hello World!",
+              "actual": "NÀ\u0001À\u0004ð\u0006\u0010\u0000\u000fø\u0001>à\u0007",
+              "error": "Output mismatch"
+            },
+            {
+              "test_case": 2,
+              "passed": false,
+              "expected": "test",
+              "actual": "\u001fà\u00014\u0000\u0005",
+              "error": "Output mismatch"
+            }
+          ],
+          "pass_rate": "0/2"
+        },
+        "test_driven": {
+          "thinking": "",
+          "name": "",
+          "code": "",
+          "passed": false,
+          "error": "Expecting ',' delimiter: line 4 column 39 (char 297)",
+          "test_results": [],
+          "pass_rate": "0/2"
+        }
+      }
+    },
+    "problem_1": {
+      "prompt": "\nclass Solution:\n    def maxSizeSlices(self, slices: List[int]) -> int:\n            \"\"\"There is a pizza with 3n slices of varying size, you and your friends will take slices of pizza as follows:\n\nYou will pick any pizza slice.\nYour friend Alice will pick next slice in anti clockwise direction of your pick. \nYour friend Bob will pick next slice in clockwise direction of your pick.\nRepeat until there are no more slices of pizzas.\n\nSizes of Pizza slices is represented by circular array slices in clockwise direction.\nReturn the maximum possible sum of slice sizes which you can have.\n \nExample 1:\n\nInput: slices = [1,2,3,4,5,6]\nOutput: 10\nExplanation: Pick pizza slice of size 4, Alice and Bob will pick slices with size 3 and 5 respectively. Then Pick slices with size 6, finally Alice and Bob will pick slice of size 2 and 1 respectively. Total = 4 + 6.\n\nExample 2:\n\nInput: slices = [8,9,8,6,1,1]\nOutput: 16\nOutput: Pick pizza slice of size 8 in each turn. If you pick slice with size 9 your partners will pick slices of size 8.\n\nExample 3:\nInput: slices = [4,1,2,5,8,3,1,9,7]\nOutput: 21\n\nExample 4:\nInput: slices = [3,1,2]\nOutput: 3\n\n \nConstraints:\n\n1 <= slices.length <= 500\nslices.length % 3 == 0\n1 <= slices[i] <= 1000\n    \"\"\"\n",
+      "strategies": {
+        "cot": {
+          "thinking": "STEP 1 - UNDERSTAND: The problem involves selecting pizza slices from a circular array to maximize the sum of the selected slices. The selection process involves alternating picks between you and your friends, with specific rules for their choices. The input is a list of integers representing slice sizes, and the output is the maximum sum of slices you can pick. The constraints ensure the list length is a multiple of 3 and within manageable limits.\n\nSTEP 2 - PLAN: This problem can be modeled as a variant of the House Robber problem, where you cannot pick adjacent elements. Since the array is circular, we need to consider two scenarios: one where the first element is picked and the last is not, and vice versa. We'll use dynamic programming to solve this. The DP table will store the maximum sum achievable up to each index, considering the constraints.\n\nSTEP 3 - EDGE CASES: Empty list (not possible due to constraints). Single element list (return the element). All elements are the same (sum of every third element). List with alternating high and low values (ensure correct selection).\n\nSTEP 4 - IMPLEMENT: Implement the dynamic programming approach with two passes: one excluding the last element and one excluding the first element. Use a helper function to compute the maximum sum for a linear array.",
+          "name": "maxSizeSlices",
+          "code": "class Solution:\n    def maxSizeSlices(self, slices: List[int]) -> int:\n        def dp(arr):\n            n = len(arr)\n            k = n // 3\n            dp = [[0] * (k + 1) for _ in range(n + 1)]\n            for i in range(1, n + 1):\n                for j in range(1, k + 1):\n                    dp[i][j] = max(dp[i - 1][j], (dp[i - 2][j - 1] if i >= 2 else 0) + arr[i - 1])\n            return dp[n][k]\n        return max(dp(slices[:-1]), dp(slices[1:]))",
+          "passed": false,
+          "error": "Some test cases failed",
+          "test_results": [
+            {
+              "test_case": 1,
+              "passed": false,
+              "expected": "10",
+              "actual": "6",
+              "error": "Output mismatch"
+            }
+          ],
+          "pass_rate": "0/1"
+        },
+        "test_driven": {
+          "thinking": "",
+          "name": "",
+          "code": "",
+          "passed": false,
+          "error": "Expecting value: line 1 column 1 (char 0)",
+          "test_results": [],
+          "pass_rate": "0/1"
+        }
+      }
+    },
+    "problem_2": {
+      "prompt": "\nclass Solution:\n    def numTimesAllBlue(self, light: List[int]) -> int:\n            \"\"\"There is a room with n bulbs, numbered from 1 to n, arranged in a row from left to right. Initially, all the bulbs are turned off.\nAt moment k (for k from 0 to n - 1), we turn on the light[k] bulb. A bulb change color to blue only if it is on and all the previous bulbs (to the left) are turned on too.\nReturn the number of moments in which all turned on bulbs are blue.\n \nExample 1:\n\nInput: light = [2,1,3,5,4]\nOutput: 3\nExplanation: All bulbs turned on, are blue at the moment 1, 2 and 4.\n\nExample 2:\nInput: light = [3,2,4,1,5]\nOutput: 2\nExplanation: All bulbs turned on, are blue at the moment 3, and 4 (index-0).\n\nExample 3:\nInput: light = [4,1,2,3]\nOutput: 1\nExplanation: All bulbs turned on, are blue at the moment 3 (index-0).\nBulb 4th changes to blue at the moment 3.\n\nExample 4:\nInput: light = [2,1,4,3,6,5]\nOutput: 3\n\nExample 5:\nInput: light = [1,2,3,4,5,6]\nOutput: 6\n\n \nConstraints:\n\nn == light.length\n1 <= n <= 5 * 10^4\nlight is a permutation of  [1, 2, ..., n]\n    \"\"\"\n",
+      "strategies": {
+        "cot": {
+          "thinking": "STEP 1 - UNDERSTAND: The input is a list of integers representing the order in which bulbs are turned on. The output is the number of moments when all turned-on bulbs are blue. A bulb turns blue if it is on and all previous bulbs (to the left) are also on. The examples show that we need to track the maximum bulb turned on so far and compare it to the current moment to determine if all bulbs up to that point are on. STEP 2 - PLAN: We can iterate through the list, keeping track of the maximum bulb turned on so far. At each step, if the maximum bulb turned on equals the current moment (1-based index), it means all bulbs up to that point are on, and we can increment our count. This approach is efficient with a time complexity of O(n) and space complexity of O(1). STEP 3 - EDGE CASES: The list can be of length 1, in which case the output is 1. The list can be in perfect order (1,2,3,...), in which case the output is the length of the list. The list can be in reverse order, in which case the output is 1. STEP 4 - IMPLEMENT: We will initialize a variable to keep track of the maximum bulb turned on and another to count the moments when all turned-on bulbs are blue. We will iterate through the list, updating the maximum and the count as needed.",
+          "name": "numTimesAllBlue",
+          "code": "class Solution:\n    def numTimesAllBlue(self, light: List[int]) -> int:\n        max_bulb = 0\n        count = 0\n        for i, bulb in enumerate(light, 1):\n            max_bulb = max(max_bulb, bulb)\n            if max_bulb == i:\n                count += 1\n        return count",
+          "passed": true,
+          "error": "",
+          "test_results": [
+            {
+              "test_case": 1,
+              "passed": true,
+              "expected": "3",
+              "actual": "3",
+              "error": ""
+            }
+          ],
+          "pass_rate": "1/1"
+        },
+        "test_driven": {
+          "thinking": "",
+          "name": "",
+          "code": "",
+          "passed": false,
+          "error": "Expecting value: line 1 column 1 (char 0)",
+          "test_results": [],
+          "pass_rate": "0/1"
+        }
+      }
+    },
+    "problem_3": {
+      "prompt": "\nclass Solution:\n    def unhappyFriends(self, n: int, preferences: List[List[int]], pairs: List[List[int]]) -> int:\n            \"\"\"You are given a list of preferences for n friends, where n is always even.\nFor each person i, preferences[i] contains a list of friends sorted in the order of preference. In other words, a friend earlier in the list is more preferred than a friend later in the list. Friends in each list are denoted by integers from 0 to n-1.\nAll the friends are divided into pairs. The pairings are given in a list pairs, where pairs[i] = [xi, yi] denotes xi is paired with yi and yi is paired with xi.\nHowever, this pairing may cause some of the friends to be unhappy. A friend x is unhappy if x is paired with y and there exists a friend u who is paired with v but:\n\nx prefers u over y, and\nu prefers x over v.\n\nReturn the number of unhappy friends.\n \nExample 1:\nInput: n = 4, preferences = [[1, 2, 3], [3, 2, 0], [3, 1, 0], [1, 2, 0]], pairs = [[0, 1], [2, 3]]\nOutput: 2\nExplanation:\nFriend 1 is unhappy because:\n- 1 is paired with 0 but prefers 3 over 0, and\n- 3 prefers 1 over 2.\nFriend 3 is unhappy because:\n- 3 is paired with 2 but prefers 1 over 2, and\n- 1 prefers 3 over 0.\nFriends 0 and 2 are happy.\n\nExample 2:\nInput: n = 2, preferences = [[1], [0]], pairs = [[1, 0]]\nOutput: 0\nExplanation: Both friends 0 and 1 are happy.\n\nExample 3:\nInput: n = 4, preferences = [[1, 3, 2], [2, 3, 0], [1, 3, 0], [0, 2, 1]], pairs = [[1, 3], [0, 2]]\nOutput: 4\n\n \nConstraints:\n\n2 <= n <= 500\nn is even.\npreferences.length == n\npreferences[i].length == n - 1\n0 <= preferences[i][j] <= n - 1\npreferences[i] does not contain i.\nAll values in preferences[i] are unique.\npairs.length == n/2\npairs[i].length == 2\nxi != yi\n0 <= xi, yi <= n - 1\nEach person is contained in exactly one pair.\n    \"\"\"\n",
+      "strategies": {
+        "cot": {
+          "thinking": "STEP 1 - UNDERSTAND: The problem involves checking for unhappy friends based on their preferences and current pairings. A friend x is unhappy if there exists another friend u such that x prefers u over their current partner y, and u prefers x over their current partner v. The input includes n (number of friends), preferences (a list where each sublist shows a friend's preference order), and pairs (current pairings). The output is the count of unhappy friends. Examples show how to determine unhappiness based on preferences. STEP 2 - PLAN: First, create a dictionary to map each person to their current partner for quick lookup. Then, for each person x, check all possible u that x prefers over their current partner y. For each such u, check if u prefers x over their current partner v. If both conditions are met, x is unhappy. Use nested loops to check all possible (x, u) combinations. Time complexity is O(n^2) due to nested loops, which is acceptable given n <= 500. Space complexity is O(n) for storing the partner mappings. STEP 3 - EDGE CASES: n=2 (only one pair, both must be happy). All friends are happy (return 0). All friends are unhappy (return n). Preferences where the first choice is the current partner (happy). STEP 4 - IMPLEMENT: Implement the logic with clear variable names and efficient checks using the partner dictionary and preference indices.",
+          "name": "unhappyFriends",
+          "code": "class Solution:\n    def unhappyFriends(self, n: int, preferences: List[List[int]], pairs: List[List[int]]) -> int:\n        partner = {}\n        for x, y in pairs:\n            partner[x] = y\n            partner[y] = x\n        \n        unhappy = 0\n        for x in range(n):\n            y = partner[x]\n            for u in preferences[x]:\n                if u == y:\n                    break\n                v = partner[u]\n                if preferences[u].index(x) < preferences[u].index(v):\n                    unhappy += 1\n                    break\n        return unhappy",
+          "passed": false,
+          "error": "Some test cases failed",
+          "test_results": [
+            {
+              "test_case": 1,
+              "passed": false,
+              "expected": "[2]",
+              "actual": "",
+              "error": "not enough values to unpack (expected 2, got 0)"
+            }
+          ],
+          "pass_rate": "0/1"
+        },
+        "test_driven": {
+          "thinking": "",
+          "name": "",
+          "code": "",
+          "passed": false,
+          "error": "Invalid \\escape: line 1 column 479 (char 478)",
+          "test_results": [],
+          "pass_rate": "0/1"
+        }
+      }
+    },
+    "problem_4": {
+      "prompt": "\nclass Solution:\n    def minSwaps(self, grid: List[List[int]]) -> int:\n            \"\"\"Given an n x n binary grid, in one step you can choose two adjacent rows of the grid and swap them.\nA grid is said to be valid if all the cells above the main diagonal are zeros.\nReturn the minimum number of steps needed to make the grid valid, or -1 if the grid cannot be valid.\nThe main diagonal of a grid is the diagonal that starts at cell (1, 1) and ends at cell (n, n).\n \nExample 1:\n\nInput: grid = [[0,0,1],[1,1,0],[1,0,0]]\nOutput: 3\n\nExample 2:\n\nInput: grid = [[0,1,1,0],[0,1,1,0],[0,1,1,0],[0,1,1,0]]\nOutput: -1\nExplanation: All rows are similar, swaps have no effect on the grid.\n\nExample 3:\n\nInput: grid = [[1,0,0],[1,1,0],[1,1,1]]\nOutput: 0\n\n \nConstraints:\n\nn == grid.length\nn == grid[i].length\n1 <= n <= 200\ngrid[i][j] is 0 or 1\n    \"\"\"\n",
+      "strategies": {
+        "cot": {
+          "thinking": "STEP 1 - UNDERSTAND: The input is an n x n binary grid. We need to make the grid valid by ensuring all cells above the main diagonal are zeros. We can swap adjacent rows to achieve this. The output is the minimum number of swaps needed or -1 if it's impossible. Examples show that valid grids require specific row arrangements based on trailing zeros. STEP 2 - PLAN: For each row, count the number of trailing zeros. The required number of trailing zeros for row i is n - i - 1. We need to arrange the rows in descending order of trailing zeros. Use a greedy approach: for each row, find the first row below it that meets the requirement and swap it up. Count the swaps. If no such row is found, return -1. Time complexity: O(n^2), Space complexity: O(n). STEP 3 - EDGE CASES: Grids already valid → return 0. Grids with all rows identical → return -1. Grids with insufficient trailing zeros → return -1. STEP 4 - IMPLEMENT: Implement the greedy approach by iterating through each row and finding the appropriate row to swap.",
+          "name": "minSwaps",
+          "code": "class Solution:\n    def minSwaps(self, grid: List[List[int]]) -> int:\n        n = len(grid)\n        trailing_zeros = [0] * n\n        for i in range(n):\n            count = 0\n            for j in range(n - 1, -1, -1):\n                if grid[i][j] == 0:\n                    count += 1\n                else:\n                    break\n            trailing_zeros[i] = count\n        swaps = 0\n        for i in range(n):\n            required = n - i - 1\n            if trailing_zeros[i] >= required:\n                continue\n            found = False\n            for j in range(i + 1, n):\n                if trailing_zeros[j] >= required:\n                    found = True\n                    while j > i:\n                        trailing_zeros[j], trailing_zeros[j - 1] = trailing_zeros[j - 1], trailing_zeros[j]\n                        swaps += 1\n                        j -= 1\n                    break\n            if not found:\n                return -1\n        return swaps",
+          "passed": false,
+          "error": "Some test cases failed",
+          "test_results": [
+            {
+              "test_case": 1,
+              "passed": false,
+              "expected": "[3]",
+              "actual": "",
+              "error": "list index out of range"
+            }
+          ],
+          "pass_rate": "0/1"
+        },
+        "test_driven": {
+          "thinking": [
+            {
+              "role": "system",
+              "content": "\nYou are a test-driven development agent. \nFollow these steps:\n1. Analyze the problem requirements and extract a SHORT problem name (e.g., \"is_prime\", \"fibonacci\", \"sort_array\").\n* Use tool to check the available directory and scripts exists.\n2. Ensure directory `test_driven_agent` exists (e.g., `mkdir -p test_driven_agent`).\n3. Create `test_driven_agent/<problem_name>.py` that contains both the solution implementation and comprehensive automated tests that execute when the file runs.\n4. Run the combined file with `python test_driven_agent/<problem_name>.py` to validate the solution against the tests.\n\n5.**IMPORTANT** Refine `test_driven_agent/<problem_name>.py`, rerunning `python test_driven_agent/<problem_name>.py` until all tests pass \n\n\nConstraints:\n- All artifacts must stay inside `test_driven_agent/`.\n- Only the single file `test_driven_agent/<problem_name>.py` may be created; it must contain both tests and solution code.\n- Use the same `<problem_name>` everywhere, including filenames, function identifiers\n"
+            },
+            {
+              "role": "user",
+              "content": "\nclass Solution:\n    def minSwaps(self, grid: List[List[int]]) -> int:\n            \"\"\"Given an n x n binary grid, in one step you can choose two adjacent rows of the grid and swap them.\nA grid is said to be valid if all the cells above the main diagonal are zeros.\nReturn the minimum number of steps needed to make the grid valid, or -1 if the grid cannot be valid.\nThe main diagonal of a grid is the diagonal that starts at cell (1, 1) and ends at cell (n, n).\n \nExample 1:\n\nInput: grid = [[0,0,1],[1,1,0],[1,0,0]]\nOutput: 3\n\nExample 2:\n\nInput: grid = [[0,1,1,0],[0,1,1,0],[0,1,1,0],[0,1,1,0]]\nOutput: -1\nExplanation: All rows are similar, swaps have no effect on the grid.\n\nExample 3:\n\nInput: grid = [[1,0,0],[1,1,0],[1,1,1]]\nOutput: 0\n\n \nConstraints:\n\nn == grid.length\nn == grid[i].length\n1 <= n <= 200\ngrid[i][j] is 0 or 1\n    \"\"\"\n"
+            },
+            

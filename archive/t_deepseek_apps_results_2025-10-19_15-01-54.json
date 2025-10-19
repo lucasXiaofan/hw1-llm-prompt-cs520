@@ -1,0 +1,23 @@
+{
+  "model": "deepseek/deepseek-chat-v3",
+  "strategies": {
+    "test_driven": {
+      "system_prompt": "\nYou are a test-driven development agent. \nFollow these steps:\n1. Analyze the problem requirements and extract a SHORT problem name (e.g., \"is_prime\", \"fibonacci\", \"sort_array\").\n* Use tool to check the available directory and scripts exists.\n2. Ensure directory `test_driven_agent` exists (e.g., `mkdir -p test_driven_agent`).\n3. Create `test_driven_agent/<problem_name>.py` that contains both the solution implementation and comprehensive automated tests that execute when the file runs.\n4. Run the combined file with `python test_driven_agent/<problem_name>.py` to validate the solution against the tests.\n\n5.**IMPORTANT** Refine `test_driven_agent/<problem_name>.py`, rerunning `python test_driven_agent/<problem_name>.py` until all tests pass \n\n\nConstraints:\n- All artifacts must stay inside `test_driven_agent/`.\n- Only the single file `test_driven_agent/<problem_name>.py` may be created; it must contain both tests and solution code.\n- Use the same `<problem_name>` everywhere, including filenames, function identifiers\n",
+      "description": "Self-Planning strategy (two LLM calls)."
+    }
+  },
+  "tests": {
+    "problem_0": {
+      "prompt": "\ndef b91decode(strng):\n\t    \"\"\"[BasE91](http://base91.sourceforge.net/) is a method for encoding binary as ASCII characters. It is more efficient than Base64 and needs 91 characters to represent the encoded data.\n\nThe following ASCII charakters are used:\n\n    'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'\n    '!#$%&()*+,./:;<=>?@[]^_`{|}~\"'\n    \nCreate two functions that encode strings to basE91 string and decodes the other way round. \n\n    b91encode('test') = 'fPNKd'\n    b91decode('fPNKd') = 'test'\n    \n    b91decode('>OwJh>Io0Tv!8PE') = 'Hello World!'\n    b91encode('Hello World!') = '>OwJh>Io0Tv!8PE'\n    \nInput strings are valid.\n    \"\"\"\n",
+      "strategies": {
+        "test_driven": {
+          "thinking": [
+            {
+              "role": "system",
+              "content": "\nYou are a test-driven development agent. \nFollow these steps:\n1. Analyze the problem requirements and extract a SHORT problem name (e.g., \"is_prime\", \"fibonacci\", \"sort_array\").\n* Use tool to check the available directory and scripts exists.\n2. Ensure directory `test_driven_agent` exists (e.g., `mkdir -p test_driven_agent`).\n3. Create `test_driven_agent/<problem_name>.py` that contains both the solution implementation and comprehensive automated tests that execute when the file runs.\n4. Run the combined file with `python test_driven_agent/<problem_name>.py` to validate the solution against the tests.\n\n5.**IMPORTANT** Refine `test_driven_agent/<problem_name>.py`, rerunning `python test_driven_agent/<problem_name>.py` until all tests pass \n\n\nConstraints:\n- All artifacts must stay inside `test_driven_agent/`.\n- Only the single file `test_driven_agent/<problem_name>.py` may be created; it must contain both tests and solution code.\n- Use the same `<problem_name>` everywhere, including filenames, function identifiers\n"
+            },
+            {
+              "role": "user",
+              "content": "\ndef b91decode(strng):\n\t    \"\"\"[BasE91](http://base91.sourceforge.net/) is a method for encoding binary as ASCII characters. It is more efficient than Base64 and needs 91 characters to represent the encoded data.\n\nThe following ASCII charakters are used:\n\n    'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'\n    '!#$%&()*+,./:;<=>?@[]^_`{|}~\"'\n    \nCreate two functions that encode strings to basE91 string and decodes the other way round. \n\n    b91encode('test') = 'fPNKd'\n    b91decode('fPNKd') = 'test'\n    \n    b91decode('>OwJh>Io0Tv!8PE') = 'Hello World!'\n    b91encode('Hello World!') = '>OwJh>Io0Tv!8PE'\n    \nInput strings are valid.\n    \"\"\"\n"
+            },
+            

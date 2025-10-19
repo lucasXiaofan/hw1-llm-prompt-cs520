@@ -4,13 +4,29 @@ import json
 import os
 from openai import OpenAI
 from dotenv import load_dotenv
-from openrouter_agent import string_to_function, clean_json_output
+from openrouter_agent import string_to_function, clean_json_output, agent, agent_tools
 
 load_dotenv()
 # ============================================
 # DETAILED VERSION (Best Practice)
 # ============================================
+test_driven_agent_system_prompt = """
+You are a test-driven development agent. 
+Follow these steps:
+1. Analyze the problem requirements and extract a SHORT problem name (e.g., "is_prime", "fibonacci", "sort_array").
+* Use tool to check the available directory and scripts exists.
+2. Ensure directory `test_driven_agent` exists (e.g., `mkdir -p test_driven_agent`).
+3. Create `test_driven_agent/<problem_name>.py` that contains both the solution implementation and comprehensive automated tests that execute when the file runs.
+4. Run the combined file with `python test_driven_agent/<problem_name>.py` to validate the solution against the tests.
 
+5.**IMPORTANT** Refine `test_driven_agent/<problem_name>.py`, rerunning `python test_driven_agent/<problem_name>.py` until all tests pass 
+
+
+Constraints:
+- All artifacts must stay inside `test_driven_agent/`.
+- Only the single file `test_driven_agent/<problem_name>.py` may be created; it must contain both tests and solution code.
+- Use the same `<problem_name>` everywhere, including filenames, function identifiers
+"""
 DETAILED_PLAN_PROMPT = """You are an expert programmer creating solution plans.
 
 Your task: Analyze the problem and create a step-by-step solution plan.
@@ -148,9 +164,32 @@ After your reasoning, output ONLY this JSON format (no markdown fences, no extra
   "code": "<complete_python_function_code_only>"
 
 
-CRITICAL: The "code" field must contain ONLY the function code, no thinking or comments."""
+CRITICAL: The "code" field must contain ONLY the code to make function run correct."""
 
-
+class Naive:
+    """Chain-of-Thought strategy (one LLM call)."""
+    
+    def __init__(self, system_prompt):
+        self.system_prompt = system_prompt
+    
+    def generate(self, client, problem):
+        """Returns: {system_prompt, thinking, name, code}"""
+        response = client.chat.completions.create(
+            model=client.default_model,
+            messages=[
+                {"role": "system", "content": self.system_prompt},
+                {"role": "user", "content": problem['prompt']}
+            ],
+            temperature=0
+        )
+        result = json.loads(clean_json_output(response.choices[0].message.content))
+        
+        return {
+            "system_prompt": self.system_prompt,
+            "thinking": "",
+            "name": result['name'],
+            "code": result['code']
+        }
 
 class CoT:
     """Chain-of-Thought strategy (one LLM call)."""
@@ -216,6 +255,38 @@ class SelfPlanning:
             "code": code_data['code']
         }
 
+class TestDrivenAgent:
+    """Self-Planning strategy (two LLM calls)."""
+    
+    def __init__(self, system_prompt = test_driven_agent_system_prompt,max_iteration:int = 15, output_instruction = """Output ONLY this JSON format (no markdown fences, no extra text):
+{
+  "thinking": "<your step-by-step reasoning>",
+  "name": "<function_name>",
+  "code": "<complete_python_function_code_only>"
+}
+
+CRITICAL: The "code" field must contain ONLY the code to make function run correct, no unit test code."""):
+        self.system_prompt = system_prompt
+        self.max_iteration = max_iteration
+        self.output_instruction = output_instruction
+    def generate(self, client, problem):
+        
+        history, answer = agent(
+            user_prompt=problem['prompt'],
+            system_message=self.system_prompt,
+            model_name= client.default_model,
+            tools=agent_tools,
+            max_iterations=self.max_iteration,
+            output_instruction=self.output_instruction
+            
+        )
+        code_data = json.loads(clean_json_output(answer))
+        return {
+            "system_prompt": self.system_prompt,
+            "thinking": code_data['thinking'],
+            "name": code_data['name'],
+            "code": code_data['code']
+        }
 
 # ============================================
 # BLACKBOX TEST

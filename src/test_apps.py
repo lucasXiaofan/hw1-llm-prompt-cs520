@@ -9,7 +9,7 @@ from openai import OpenAI
 from dotenv import load_dotenv
 
 # Import strategies and prompts from test_humaneval
-from test_humaneval import *
+from LLM_strategies import *
 from openrouter_agent import clean_json_output
 
 load_dotenv()
@@ -166,7 +166,7 @@ def run_tests(model_name, strategies, problems_file, save_file, max_workers=None
 
     with open(problems_file, encoding='utf-8') as f:
         problems = json.load(f)
-
+    problems = problems[:5]
     results = {
         "model": model_name,
         "strategies": {
@@ -181,6 +181,7 @@ def run_tests(model_name, strategies, problems_file, save_file, max_workers=None
 
     total_tasks = len(problems) * len(strategies)
     resolved_workers = max_workers if max_workers is not None else max(1, min(32, total_tasks))
+    # resolved_workers = 1
     lock = Lock()
 
     for idx, problem in enumerate(problems):
@@ -269,26 +270,46 @@ if __name__ == "__main__":
         plan_prompt=MINIMAL_PLAN_PROMPT,
         code_prompt=MINIMAL_CODE_PROMPT
     )
+    
+    naive = Naive(system_prompt=MINIMAL_CODE_PROMPT)
+    
+    test_driven_agent = TestDrivenAgent(
+        system_prompt= test_driven_agent_system_prompt,
+        output_instruction="""
+        Output ONLY this JSON format (no markdown fences, no extra text):
+{
+  "thinking": "<your step-by-step reasoning>",
+  "name": "<function_name>",
+  "code": "<complete_python_function_code_only>"
+
+
+CRITICAL: The "code" field must contain ONLY the code to make function run correct, no unit test code.
+        """
+    )
 
     # 2. Run tests on competition problems
     run_tests(
         model_name="deepseek/deepseek-chat-v3",
         strategies={
-            "cot": cot,
-            "self_planning": self_planning
+            # "naive": naive,
+            "self_planning": self_planning,
+            # "cot":cot,
+            "test_driven":test_driven_agent,
         },
         problems_file="hard_apps_problem.json",
-        save_file=f"why_deepseek_apps_results_{get_timestamp()}.json"
+        save_file=f"t_deepseek_apps_results_{get_timestamp()}.json"
     )
     
-    model_name_2 = 'google/gemini-2.0-flash-001'
-    run_tests(
-        model_name=model_name_2,
-        strategies={
-            "cot": cot,
-            "self_planning": self_planning
-        },
-        problems_file="hard_apps_problem.json",
-        save_file=f"why_gemini-2_0_apps_results_{get_timestamp()}.json"
-    )
+    # model_name_2 = 'google/gemini-2.0-flash-001'
+    # run_tests(
+    #     model_name=model_name_2,
+    #     strategies={
+    #         # "naive": naive,
+    #         "self_planning": self_planning,
+    #         # "cot":cot,
+    #         "test_driven":test_driven_agent,
+    #     },
+    #     problems_file="hard_apps_problem.json",
+    #     save_file=f"t_gemini-2_0_apps_results_{get_timestamp()}.json"
+    # )
 
