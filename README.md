@@ -1,48 +1,81 @@
-# LLM Code Generation: Prompting Strategies & Agentic Workflow
+# LLM Code Generation: Prompting Strategies & Test-Driven Agent
 
 **CS520 Homework 1** - Prompting, Debugging, and Innovation for Code Generation with LLMs
 
+**Author:** XiaoFan Lu
+
 ## Overview
 
-This repository implements and compares different prompting strategies for LLM-based code generation, featuring a novel **test-driven agentic workflow** as the innovation component.
+This repository systematically investigates how different prompting strategies affect LLM code generation performance through iterative experimentation and prompt refinement. The project implements three prompting strategies and introduces a novel **test-driven agentic framework** that autonomously writes tests and refines code through tool use.
 
-### Three Approaches Compared
+### Three Prompting Strategies Evaluated
 
-1. **Stepwise Chain-of-Thought (SCoT)**: Breaking down problems into explicit step-by-step reasoning
-2. **Self-Repair**: Generating code, testing it, and iteratively fixing errors
-3. **Test-Driven Agent** (Innovation): Autonomous agent that writes tests first, then generates code to pass them
+1. **Chain-of-Thought (CoT)**: Structured step-by-step reasoning before code generation
+2. **Self-Planning**: Two-phase approach separating planning from implementation
+3. **Test-Driven Agent** (Innovation): Autonomous agent that writes tests first, then generates and refines code iteratively using tool calls
 
 ### Models Tested
 
-- `deepseek/deepseek-chat-v3` (DeepSeek)
-- `x-ai/grok-code-fast-1` (xAI)
+- `deepseek/deepseek-chat-v3` (DeepSeek V3)
+- `google/gemini-2.0-flash-001` (Gemini 2.0 Flash)
 
-All accessed via [OpenRouter API](https://openrouter.ai/) with:
+All models accessed via [OpenRouter API](https://openrouter.ai/)
 
-- ✅ Structured outputs (JSON schema validation)
-- ✅ Tool/function calling
-- ✅ Prompt caching (for efficiency)
+## Quick Start
+
+```bash
+# 1. Clone and setup
+git clone <repo-url>
+cd hw1-llm-prompt
+pip install -r requirements.txt
+
+# 2. Configure API key
+cp .env.example .env
+# Edit .env and add: OPENROUTER_API_KEY=your_key_here
+
+# 3. Run the main experiment
+cd src
+python test_apps.py
+
+# 4. Or test the agent interactively
+python openrouter_agent.py
+```
+
+See [How to Run This Repository](#how-to-run-this-repository) for detailed instructions.
 
 ## Project Structure
 
 ```
-.
-├── README.md                      # This file
-├── requirements.txt               # Python dependencies
-├── .env.example                   # Environment variable template
-├── openrouter_client.py          # OpenRouter LLM wrapper
-├── tools.py                       # Tool definitions (bash, read, write, edit)
-├── agent.py                       # Main agentic loop
-├── strategies/
-│   ├── stepwise_cot.py           # Stepwise CoT implementation
-│   ├── self_repair.py            # Self-repair implementation
-│   └── test_driven_agent.py      # Test-driven agent (innovation)
-├── evaluate.py                    # Evaluation script for all strategies
-├── problems/
-│   ├── swe_bench_problem.md      # SWE-Bench problem (sklearn)
-│   └── humaneval_problems.py     # 9 HumanEval problems
-├── results/                       # Evaluation results (generated)
-└── problem_10297_context.md      # Example problem (sklearn patch)
+hw1-llm-prompt/
+├── README.md                                    # This file
+├── prompt improvement for llm coding.md         # Full report with methodology & analysis
+├── requirements.txt                             # Python dependencies
+├── .env.example                                 # API key template
+├── hard_apps_problem.json                       # Test problems (APPS dataset)
+│
+├── src/                                         # Main source code
+│   ├── LLM_strategies.py                        # All prompting strategies & implementations
+│   ├── openrouter_agent.py                      # Tool-calling agent framework
+│   └── test_apps.py                             # Testing harness for APPS problems
+│
+├── test_driven_agent/                           # Generated solutions (Part 3)
+│   ├── base91.py                                # Base91 encoding solution
+│   ├── max_pizza_slices.py                      # Pizza slicing DP solution
+│   ├── num_times_all_blue.py                    # Bulb tracking solution
+│   ├── unhappy_friends.py                       # Friend pairing solution
+│   └── min_swaps_valid_grid.py                  # Grid swap solution
+│
+├── part_1_testing_results/                      # Baseline results
+│   ├── deepseek_apps_results_2025-10-18_14-31-37.json
+│   └── gemini-2_0_apps_results_2025-10-18_14-25-01.json
+│
+├── part_2_testing_results/                      # Improved prompts results
+│   ├── deepseek_apps_results_2025-10-18_10-02-38.json
+│   └── gemini-2_0_apps_results_2025-10-18_13-02-04.json
+│
+└── part_3_testing_results/                      # Test-driven agent results
+    ├── t_deepseek_apps_results_2025-10-19_15-32-11.json
+    └── t_gemini-2_0_apps_results_2025-10-19_15-38-52.json
 ```
 
 ## Setup
@@ -53,6 +86,11 @@ All accessed via [OpenRouter API](https://openrouter.ai/) with:
 pip install -r requirements.txt
 ```
 
+Required packages:
+- `requests>=2.31.0` - HTTP requests for OpenRouter API
+- `python-dotenv>=1.0.0` - Environment variable management
+- Optional: `pydantic`, `pandas`, `matplotlib`, `seaborn` for analysis
+
 ### 2. Configure API Key
 
 ```bash
@@ -62,238 +100,415 @@ cp .env.example .env
 
 Get your API key from: https://openrouter.ai/keys
 
+Your `.env` file should contain:
+```
+OPENROUTER_API_KEY=your_key_here
+```
+
 ### 3. Verify Setup
 
 ```bash
 python -c "from dotenv import load_dotenv; import os; load_dotenv(); print('API Key:', os.getenv('OPENROUTER_API_KEY')[:20] + '...')"
 ```
 
-## Usage
+## How to Navigate This Repository
 
-### Quick Start: Run Test-Driven Agent
+### Key Files to Check
 
-```bash
-python agent.py --problem problems/swe_bench_problem.md --model deepseek/deepseek-chat-v3
+1. **[prompt improvement for llm coding.md](prompt%20improvement%20for%20llm%20coding.md)** - Complete report with:
+   - Part 1: Initial prompts and baseline results
+   - Part 2: Iterative debugging and prompt refinement
+   - Part 3: Test-driven agent innovation and analysis
+
+2. **[src/LLM_strategies.py](src/LLM_strategies.py)** - All prompt definitions and strategy implementations:
+   - Lines 131-168: `STEPWISE_COT` prompt (improved CoT)
+   - Lines 78-79: `MINIMAL_PLAN_PROMPT` and `MINIMAL_CODE_PROMPT` (Self-Planning)
+   - Lines 13-29: `test_driven_agent_system_prompt` (TDD Agent)
+   - Lines 194-217: `CoT` class implementation
+   - Lines 220-256: `SelfPlanning` class implementation
+   - Lines 258-289: `TestDrivenAgent` class implementation
+
+3. **[src/openrouter_agent.py](src/openrouter_agent.py)** - Agentic framework with tool calling:
+   - Lines 19-55: Tool definitions (bash, think)
+   - Lines 58-81: Tool executor
+   - Lines 83-168: Agent loop with max iterations
+   - Lines 169-298: `string_to_function()` - Safe code execution
+
+4. **[src/test_apps.py](src/test_apps.py)** - Main testing harness:
+   - Lines 86-143: `test_strategy()` - Test a single strategy on a problem
+   - Lines 150-247: `run_tests()` - Run all strategies with threading
+   - Lines 258-315: Usage example
+
+### Generated Code Examples
+
+Check the **[test_driven_agent/](test_driven_agent/)** directory to see LLM-generated solutions:
+
+- **[base91.py](test_driven_agent/base91.py)** - Base91 encoding/decoding implementation
+- **[max_pizza_slices.py](test_driven_agent/max_pizza_slices.py)** - Dynamic programming solution
+- **[num_times_all_blue.py](test_driven_agent/num_times_all_blue.py)** - Array tracking algorithm
+
+Each file contains both the solution code and unit tests generated by the test-driven agent.
+
+### Experiment Results
+
+Results are organized by experiment phase:
+
+**Part 1 - Baseline (Initial Prompts):**
+- [part_1_testing_results/deepseek_apps_results_2025-10-18_14-31-37.json](part_1_testing_results/deepseek_apps_results_2025-10-18_14-31-37.json)
+- [part_1_testing_results/gemini-2_0_apps_results_2025-10-18_14-25-01.json](part_1_testing_results/gemini-2_0_apps_results_2025-10-18_14-25-01.json)
+
+**Part 2 - Improved (Refined Prompts):**
+- [part_2_testing_results/deepseek_apps_results_2025-10-18_10-02-38.json](part_2_testing_results/deepseek_apps_results_2025-10-18_10-02-38.json)
+- [part_2_testing_results/gemini-2_0_apps_results_2025-10-18_13-02-04.json](part_2_testing_results/gemini-2_0_apps_results_2025-10-18_13-02-04.json)
+
+**Part 3 - Test-Driven Agent:**
+- [part_3_testing_results/t_deepseek_apps_results_2025-10-19_15-32-11.json](part_3_testing_results/t_deepseek_apps_results_2025-10-19_15-32-11.json)
+- [part_3_testing_results/t_gemini-2_0_apps_results_2025-10-19_15-38-52.json](part_3_testing_results/t_gemini-2_0_apps_results_2025-10-19_15-38-52.json)
+
+Each JSON file contains:
+```json
+{
+  "model": "model_name",
+  "strategies": {
+    "strategy_name": {
+      "system_prompt": "...",
+      "description": "..."
+    }
+  },
+  "tests": {
+    "problem_0": {
+      "prompt": "...",
+      "strategies": {
+        "strategy_name": {
+          "thinking": "...",
+          "name": "function_name",
+          "code": "...",
+          "passed": true/false,
+          "test_results": [...],
+          "pass_rate": "3/3"
+        }
+      }
+    }
+  },
+  "summary": {
+    "strategy_name": {
+      "total_problems": 14,
+      "fully_passed": 6,
+      "pass_rate": "6/14 (42.9%)"
+    }
+  }
+}
 ```
 
-### Compare All Strategies
+## How to Run This Repository
+
+### Option 1: Run Main Testing Script (Recommended)
+
+Test all strategies on the APPS dataset:
 
 ```bash
-python evaluate.py --output results/comparison.json
+cd src
+python test_apps.py
 ```
 
 This will:
+1. Load 14 problems from `hard_apps_problem.json` (first 5 used by default)
+2. Test each strategy (CoT, Self-Planning, Test-Driven Agent)
+3. Run tests in parallel for efficiency
+4. Save timestamped results to current directory
+5. Print summary statistics
 
-1. Run all 3 strategies across all 3 models (9 combinations)
-2. Test on 10 problems (1 SWE-Bench + 9 HumanEval)
-3. Measure pass@k, execution time, and token usage
-4. Generate comparison tables and visualizations
+**Customize the run:**
+Edit lines 258-315 in `test_apps.py` to:
+- Change model: `model_name="google/gemini-2.0-flash-001"`
+- Select strategies: Comment/uncomment in the `strategies` dict
+- Adjust problems: Change `problems[:5]` on line 169
 
-### Individual Strategy Testing
+### Option 2: Run Individual Agent Test
+
+Test the tool-calling agent interactively:
 
 ```bash
-# Stepwise CoT
-python strategies/stepwise_cot.py --problem problems/swe_bench_problem.md --model deepseek/deepseek-chat-v3
-
-# Self-Repair
-python strategies/self_repair.py --problem problems/humaneval_problems.py --problem-id HumanEval/0 --model x-ai/grok-2-vision-1212
-
-# Test-Driven Agent (Innovation)
-python strategies/test_driven_agent.py --problem problems/swe_bench_problem.md --model anthropic/claude-3.5-sonnet
+cd src
+python openrouter_agent.py
 ```
 
-## Problems Selected
+This demonstrates the test-driven agent:
+- Reads a problem from `hard_apps_problem.json`
+- Shows iteration-by-iteration tool calls
+- Prints bash commands and their outputs
+- Returns final JSON solution
 
-### 1. SWE-Bench Problem (Real-World)
+Watch the agent autonomously:
+1. Create the `test_driven_agent/` directory
+2. Write combined test + solution files
+3. Execute tests with `python test_driven_agent/<problem>.py`
+4. Iterate on failures until tests pass
 
-**Problem**: sklearn `RidgeClassifierCV` missing `store_cv_values` parameter
-**File**: `problems/swe_bench_problem.md`
-**Difficulty**: Requires understanding inheritance, docstring formatting, and test writing
-**Source**: https://github.com/scikit-learn/scikit-learn/issues/10297
+### Option 3: Custom Strategy Testing
 
-### 2. HumanEval Problems (9 selected)
-
-**File**: `problems/humaneval_problems.py`
-
-| ID            | Problem               | Difficulty | Skills Tested                         |
-| ------------- | --------------------- | ---------- | ------------------------------------- |
-| HumanEval/0   | has_close_elements    | Easy       | List comparison, tolerance checking   |
-| HumanEval/1   | separate_paren_groups | Medium     | String parsing, stack manipulation    |
-| HumanEval/10  | make_palindrome       | Medium     | String manipulation, algorithm design |
-| HumanEval/20  | find_closest_elements | Medium     | Sorting, edge cases                   |
-| HumanEval/31  | is_prime              | Easy       | Mathematical reasoning                |
-| HumanEval/50  | encode_shift          | Medium     | String encoding/decoding              |
-| HumanEval/75  | is_multiply_prime     | Hard       | Factorization, composability          |
-| HumanEval/100 | make_a_pile           | Easy       | Arithmetic sequences                  |
-| HumanEval/125 | split_words           | Medium     | String parsing, regex alternative     |
-
-**Total**: 10 problems covering diverse programming tasks
-
-## Innovation: Test-Driven Agentic Workflow
-
-### Key Idea
-
-Traditional approaches generate code and then test it. Our **test-driven agent**:
-
-1. **Analyzes the problem** to understand requirements
-2. **Writes comprehensive tests first** (TDD approach)
-3. **Generates minimal code** to pass each test
-4. **Iteratively refines** until all tests pass
-5. **Uses tools autonomously** (bash, file operations)
-
-### Advantages
-
-- ✅ Better test coverage (tests written before code)
-- ✅ Prevents over-engineering (minimal code to pass tests)
-- ✅ Autonomous error recovery (agent fixes its own mistakes)
-- ✅ Explicit validation at each step
-
-### Agent Loop Architecture
-
-```
-┌─────────────────────────────────────────┐
-│  Problem Description                    │
-└──────────────┬──────────────────────────┘
-               │
-               ▼
-┌─────────────────────────────────────────┐
-│  LLM: Analyze & Plan Tests              │
-│  (with prompt caching)                  │
-└──────────────┬──────────────────────────┘
-               │
-               ▼
-┌─────────────────────────────────────────┐
-│  Tool: Write Test File                  │
-└──────────────┬──────────────────────────┘
-               │
-               ▼
-┌─────────────────────────────────────────┐
-│  LLM: Generate Code (tool calling)      │
-└──────────────┬──────────────────────────┘
-               │
-               ▼
-┌─────────────────────────────────────────┐
-│  Tool: Write Code File                  │
-└──────────────┬──────────────────────────┘
-               │
-               ▼
-┌─────────────────────────────────────────┐
-│  Tool: Run Tests (bash)                 │
-└──────────────┬──────────────────────────┘
-               │
-               ▼
-        ┌──────┴──────┐
-        │  All Pass?  │
-        └──────┬──────┘
-               │
-        ┌──────┴──────┐
-        │             │
-       Yes            No
-        │             │
-        ▼             ▼
-     Success   ┌──────────────┐
-               │ LLM: Debug   │
-               │ & Fix Code   │
-               └──────┬───────┘
-                      │
-                      └──────┐
-                             │
-                    (max 5 iterations)
-```
-
-## OpenRouter Features Used
-
-### 1. Structured Outputs
-
-Forces LLM to return valid JSON matching our tool schemas:
+Create your own test script:
 
 ```python
-response = client.chat.completions.create(
-    model="deepseek/deepseek-chat-v3",
-    messages=[...],
-    response_format={
-        "type": "json_schema",
-        "json_schema": {
-            "name": "tool_calls",
-            "schema": {...}
-        }
-    }
+from LLM_strategies import CoT, SelfPlanning, TestDrivenAgent, STEPWISE_COT
+from test_apps import run_tests
+
+# Define your strategies
+my_strategies = {
+    "cot": CoT(system_prompt=STEPWISE_COT),
+    "planning": SelfPlanning(
+        plan_prompt="Create a solution plan...",
+        code_prompt="Implement the plan..."
+    )
+}
+
+# Run tests
+run_tests(
+    model_name="deepseek/deepseek-chat-v3",
+    strategies=my_strategies,
+    problems_file="../hard_apps_problem.json",
+    save_file="my_results.json",
+    max_workers=4  # Parallel execution
 )
 ```
 
-### 2. Tool Calling
+## Dataset: APPS Benchmark
 
-OpenAI-compatible function calling:
+This project uses problems from the [APPS dataset](https://github.com/hendrycks/apps) (Automated Programming Progress Standard), which contains competitive programming challenges.
 
+**Selected Problems:** 14 interview-level problems with expected return values
+- All problems require implementing class methods or functions
+- Includes input/output test cases for validation
+- Covers diverse algorithmic challenges
+
+**Problem Types:**
+1. **Base91 Encoding** (problem_0) - String manipulation, encoding algorithms
+2. **Maximum Pizza Slices** (problem_1) - Dynamic programming
+3. **Bulb Tracking** (problem_2) - Array simulation
+4. **Unhappy Friends** (problem_3) - Graph/pairing logic
+5. **Grid Swaps** (problem_4) - Matrix operations
+6. **String Mixing** (problem_5) - String processing
+7. **Tree Problems** (problem_6) - Binary tree algorithms
+8. **Permutation Sequences** (problem_7) - Combinatorics
+9. **Consecutive Numbers** (problem_13) - Hashing, set operations
+10. Additional LeetCode-style problems (problem_8-12)
+
+Each problem includes:
+- Problem statement with constraints
+- Input format specification
+- Expected output format
+- Multiple test cases with inputs/outputs
+
+## Innovation: Test-Driven Agentic Framework
+
+### Overview
+
+Unlike traditional single-shot code generation, this project implements an **autonomous test-driven development agent** that:
+
+1. **Writes tests first** based on problem understanding
+2. **Generates code to pass those tests**
+3. **Executes code automatically** using tool calls
+4. **Iteratively debugs failures** through error analysis
+5. **Refines until success** (or max iterations reached)
+
+### System Architecture
+
+```
+User Prompt (Problem)
+       │
+       ▼
+┌──────────────────────────────────────────┐
+│  LLM receives system prompt:             │
+│  "You are a test-driven dev agent..."    │
+└──────────────┬───────────────────────────┘
+               │
+               ▼
+┌──────────────────────────────────────────┐
+│  Agent decides: Use "think" tool         │
+│  Analyzes problem, extracts problem name │
+└──────────────┬───────────────────────────┘
+               │
+               ▼
+┌──────────────────────────────────────────┐
+│  Tool call: bash_command                 │
+│  "mkdir -p test_driven_agent"            │
+└──────────────┬───────────────────────────┘
+               │
+               ▼
+┌──────────────────────────────────────────┐
+│  Tool call: bash_command                 │
+│  Create <problem>.py with tests + code   │
+└──────────────┬───────────────────────────┘
+               │
+               ▼
+┌──────────────────────────────────────────┐
+│  Tool call: bash_command                 │
+│  "python test_driven_agent/<problem>.py" │
+└──────────────┬───────────────────────────┘
+               │
+         ┌─────┴─────┐
+         │ Tests Pass?│
+         └─────┬─────┘
+               │
+      ┌────────┴────────┐
+     YES               NO
+      │                 │
+      ▼                 ▼
+  Success!    ┌──────────────────────┐
+              │ LLM analyzes error   │
+              │ Edits code in file   │
+              │ Reruns tests         │
+              └──────┬───────────────┘
+                     │
+                     └──> Loop (max 15 iterations)
+
+Final: Extract solution from file
+```
+
+### Tool Definitions
+
+The agent has access to two tools:
+
+**1. `bash_command`** - Execute shell commands
 ```python
-tools = [
-    {
-        "type": "function",
-        "function": {
-            "name": "bash",
-            "description": "Execute bash command",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "command": {"type": "string"}
-                }
-            }
-        }
+{
+    "name": "bash_command",
+    "description": "Execute bash/shell commands. Can create files, list directories, etc.",
+    "parameters": {
+        "command": {"type": "string"}
     }
-]
+}
 ```
 
-### 3. Prompt Caching
-
-Reuses prompt prefixes to reduce costs:
-
+**2. `think`** - Internal reasoning
 ```python
-# OpenRouter automatically caches repeated prompt prefixes
-# Saves tokens when making multiple requests with same system prompt
+{
+    "name": "think",
+    "description": "Continue internal reasoning before giving final answer",
+    "parameters": {
+        "thought": {"type": "string"}
+    }
+}
 ```
 
-## Evaluation Metrics
+### Example Agent Trajectory
 
-| Metric             | Description                                    |
-| ------------------ | ---------------------------------------------- |
-| **pass@k**         | Proportion of test cases passed                |
-| **Execution Time** | Total time to generate solution                |
-| **Token Usage**    | Total tokens (prompt + completion)             |
-| **Tool Calls**     | Number of tool invocations                     |
-| **Iterations**     | Number of fix attempts (for self-repair/agent) |
+See a complete iteration log in the report: [prompt improvement for llm coding.md](prompt%20improvement%20for%20llm%20coding.md#one-example-trajectory-of-test-driven-agent) (lines 407-607)
 
-## Results Summary
+Key observations:
+- **Iteration 1**: Agent thinks about problem and extracts name "base91"
+- **Iteration 2**: Creates directory with `mkdir -p test_driven_agent`
+- **Iteration 3**: Writes initial code skeleton to file
+- **Iteration 4**: Runs tests, sees failures
+- **Iterations 5-9**: Iteratively fixes implementation bugs (syntax errors, algorithm issues)
+- **Iteration 10**: Tests pass, agent provides final answer
 
-Results will be generated in `results/` directory after running evaluation:
+### Critical Innovation: Autonomous Refinement
 
-- `comparison.json`: Raw data for all runs
-- `summary.csv`: Aggregate statistics per strategy/model
-- `plots/`: Visualizations comparing approaches
+The agent doesn't just generate code once—it:
+- **Observes** test failures and error messages
+- **Reasons** about what went wrong
+- **Acts** by editing the file and rerunning tests
+- **Repeats** until convergence or timeout
 
-## Key Findings
+This mimics how human developers debug code, but fully automated.
 
-_(To be filled after running experiments)_
+## Experimental Results Summary
 
-1. **Best Model for Code Generation**: TBD
-2. **Most Efficient Strategy**: TBD
-3. **Test-Driven Agent Advantages**: TBD
+### Part 1: Baseline Performance (Initial Prompts)
 
-## Repository Contents for Submission
+| Model       | Strategy      | Pass Rate | Notes                                      |
+| ----------- | ------------- | --------- | ------------------------------------------ |
+| **DeepSeek** | CoT           | 6/28 (21%) | Strong on standalone functions, weak on classes |
+| **DeepSeek** | Self-Planning | 6/28 (21%) | Similar to CoT                             |
+| **Gemini**   | CoT           | 3/28 (11%) | JSON formatting errors plagued results     |
+| **Gemini**   | Self-Planning | 3/28 (11%) | Same JSON issues as CoT                    |
 
-✅ Prompts and workflow scripts
-✅ Generated code
-✅ Test cases (1 SWE-Bench + 9 HumanEval)
-✅ Evaluation scripts and results
+**Key Issues Identified:**
+- Missing function parameters (`self` argument in class methods)
+- JSON parse errors (control characters, delimiter issues)
+- Logic errors in complex algorithms
+
+### Part 2: After Prompt Refinement
+
+| Model       | Strategy      | Pass Rate  | Improvement |
+| ----------- | ------------- | ---------- | ----------- |
+| **DeepSeek** | CoT           | 14/28 (50%) | **+133%**   |
+| **DeepSeek** | Self-Planning | 14/28 (50%) | **+133%**   |
+| **Gemini**   | CoT           | 6/28 (21%)  | **+100%**   |
+| **Gemini**   | Self-Planning | 12/28 (43%) | **+300%**   |
+
+**Overall:** 9/56 → 26/56 passing tests (**+189% improvement**)
+
+**What Worked:**
+- Explicit STEP-by-STEP reasoning structure
+- Concrete examples in prompts
+- Stronger JSON format enforcement
+- Edge case enumeration requirements
+
+### Part 3: Test-Driven Agent Innovation
+
+Testing on 5 challenging problems:
+
+| Model       | Baseline Strategy | Test-Driven Agent | Improvement |
+| ----------- | ----------------- | ----------------- | ----------- |
+| **DeepSeek** | CoT: 1/5 (20%)    | **2/5 (40%)**     | **+100%**   |
+| **Gemini**   | Self-Plan: 2/5 (40%) | **2/5 (40%)**  | Maintained  |
+
+**Successes:**
+- ✅ **problem_1** (Pizza Slices DP): Test-driven agent caught edge cases
+- ✅ **problem_2** (Bulb Tracking): All strategies succeeded
+
+**Persistent Failures:**
+- ❌ **problem_0** (Base91): Algorithm too complex, error messages unhelpful
+- ❌ **problem_3** (Unhappy Friends): Logic errors in graph pairing
+- ❌ **problem_4** (Grid Swaps): Index errors, optimization issues
+
+### Key Insights
+
+**When Test-Driven Agent Works:**
+1. Problems with clear test-case specifications
+2. Well-structured algorithmic challenges (DP, array operations)
+3. Iterative refinement can fix off-by-one errors
+
+**When It Fails:**
+1. **Self-generated tests ≠ actual test coverage** - Critical limitation!
+2. Complex algorithms requiring domain knowledge (Base91 encoding)
+3. Error messages provide insufficient debugging guidance
+4. 3-5x higher computational cost than single-shot strategies
+
+**Cross-Model Observations:**
+- DeepSeek benefits most from structured reasoning (CoT improvements)
+- Gemini is sensitive to JSON formatting (Self-Planning with minimal template works best)
+- Both models struggle with specialized algorithms regardless of strategy
+
+## Repository Contents
+
+This repository contains all required deliverables:
+
+✅ **Prompts**: All prompts in [src/LLM_strategies.py](src/LLM_strategies.py)
+✅ **Generated Code**: 5+ examples in [test_driven_agent/](test_driven_agent/)
+✅ **Test Problems**: 14 APPS problems in [hard_apps_problem.json](hard_apps_problem.json)
+✅ **Evaluation Scripts**: [src/test_apps.py](src/test_apps.py) and [src/openrouter_agent.py](src/openrouter_agent.py)
+✅ **Results**: JSON files in [part_1_testing_results/](part_1_testing_results/), [part_2_testing_results/](part_2_testing_results/), [part_3_testing_results/](part_3_testing_results/)
+✅ **Full Report**: [prompt improvement for llm coding.md](prompt%20improvement%20for%20llm%20coding.md)
 
 ## References
 
-- OpenRouter Docs: https://openrouter.ai/docs
-- Structured Outputs: https://openrouter.ai/docs/features/structured-outputs
-- Tool Calling: https://openrouter.ai/docs/features/tool-calling
-- Prompt Caching: https://openrouter.ai/docs/features/prompt-caching
-- HumanEval Dataset: https://github.com/openai/human-eval
-- SWE-Bench: https://github.com/SWE-bench/SWE-bench
+- **APPS Dataset**: [Hendrycks et al. 2021](https://github.com/hendrycks/apps) - Measuring Coding Challenge Competence With APPS
+- **OpenRouter API**: https://openrouter.ai/docs
+- **Tool Calling with LLMs**: OpenAI function calling format
+- **Test-Driven Development**: Kent Beck, "Test-Driven Development by Example"
+
+## Citation
+
+If you use this work, please cite:
+
+```
+XiaoFan Lu. "Prompting Strategies for LLM Code Generation:
+A Test-Driven Agentic Approach." CS520 Homework 1, 2025.
+```
 
 ## License
 
-MIT (for educational purposes)
+MIT License - For educational and research purposes.
